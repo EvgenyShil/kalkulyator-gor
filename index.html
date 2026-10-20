@@ -202,9 +202,8 @@ button.primary:disabled{opacity:.6;cursor:progress}
 
   <section class="box">
     <h2><span class="mark b"></span><span id="flightTitle">Перелёт</span></h2>
-    <div class="seg" id="airline" role="group" aria-label="Авиакомпания"></div>
     <div class="row">
-      <label for="base">Тариф без багажа, туда-обратно, ₽ / чел.
+      <label for="base">Билет без багажа, туда-обратно, ₽ / чел.
         <input id="base" type="number" min="0" step="100">
       </label>
       <label for="bagPrice">Доплата за багаж и лыжи, туда-обратно, ₽ <span class="est" id="bagEst"></span>
@@ -387,52 +386,51 @@ const SPAN=Math.round((S1-S0)/864e5)+1;
 const dayIdx=d=>Math.round((d-S0)/864e5);
 const sd=mmdd=>{const [m,d]=mmdd.split("-").map(Number);return new Date(m>=8?2026:2027,m-1,d)};
 
-const AL={SU:"Аэрофлот",S7:"S7",DP:"Победа",U6:"Уральские",UT:"ЮТэйр",own:"Своя цена"};
 
 /* Курорты. Оценки сезона и цены, кроме Шерегеша, — примерные, их стоит уточнять. */
 const RES={
   sheregesh:{where:"В Шерегеше",name:"Шерегеш",dest:"NOZ",airport:"Новокузнецк",lat:52.95,open:"11-15",close:"04-30",
     snow:[["11-15",.3],["12-01",.55],["12-20",.7],["01-10",.7],["01-25",.72],["02-10",.9],["03-01",1],["03-25",.95],["04-08",.7],["04-20",.4],["04-30",.2]],
     notes:{11:"Открытие, снега ещё мало",12:"Снег есть, холодно, день короткий",1:"Морозы до −30, снег хороший",2:"Глубокий снег, пухляк",3:"Лучшее время: снег и солнце",4:"Весна, к концу апреля снег сходит"},
-    airlines:["SU","S7"],bags:{SU:7650,S7:11360},bagsExact:true,xs:3320,
-    bagHint:"Аэрофлот, Эконом Оптимум: 1 место багажа до 23 кг, лыжи идут как это место. S7, Стандарт: багаж 23 кг, возврат, выбор места; инвентарь отдельно на Базовом — 2 × 4 550.",
+    bag:7650,bagExact:true,
+    bagHint:"Доплата как у Аэрофлота: Эконом Оптимум, 23 кг, лыжи идут как это место. У S7 тариф с багажом дороже, около 11 400 ₽.",
     transferLbl:"Трансфер Новокузнецк ⇄ Шерегеш, ₽",hotelHint:"Апартаменты, Весенняя 36В: 7 ночей на двоих за 38 500 ₽.",
     guideLbl:"Фрирайд на ратраках, дней",guideNeedsPass:false,half:true,promo:true,
     est:{},foodMin:2500,alcoMin:800,
-    def:{people:"2",wife:false,airline:"SU",base:27317,bag:true,bagPrice:7650,xs:"0",xsPrice:3320,hotelNight:5500,nights:7,room:"all",prepay:30,
+    def:{people:"2",wife:false,base:27317,bag:true,bagPrice:7650,xs:"0",xsPrice:3320,hotelNight:5500,nights:7,room:"all",prepay:30,
       transfer:2800,transferMode:"person",transferWays:"2",skiDays:6,pass:3100,guideDays:2,guideType:"full",guidePrice:12000,promo:true,halfPass:true,
       rent:"",rentDays:6,taxi:300,rides:2,food:3000,alco:1000,foodDays:7,extra:0}},
   kirovsk:{where:"В Кировске",name:"Кировск",dest:"KVK",airport:"Апатиты",lat:67.6,open:"11-25",close:"05-31",
     snow:[["11-25",.35],["12-15",.6],["01-15",.72],["02-15",.88],["03-10",1],["04-20",1],["05-10",.75],["05-31",.4]],
     notes:{11:"Открытие, почти всё время темно",12:"Полярная ночь: катание под фонарями",1:"Солнце возвращается в середине января, морозы",2:"Светлеет быстро, снег хороший",3:"Лучшее: снег и длинный день",4:"Отлично, весенний фрирайд",5:"Весна, сезон до конца мая"},
-    airlines:["SU"],bags:{SU:6500},xs:2500,
-    bagHint:"В Апатиты напрямую летает только Аэрофлот. Доплата за тариф с багажом примерная, проверьте на сайте.",
+    bag:6500,
+    bagHint:"В Апатиты напрямую летает только Аэрофлот. Доплата за тариф с багажом примерная.",
     transferLbl:"Такси аэропорт Апатиты ⇄ Кировск, ₽",hotelHint:"Аэропорт Хибины в 30 минутах от Кировска. Цены отеля и гида примерные.",
     guideLbl:"Гид, дней",guideNeedsPass:true,half:false,promo:false,
     est:{hotel:1,pass:1,guide:1,transfer:1},foodMin:2000,alcoMin:700,
-    def:{people:"2",wife:false,airline:"SU",base:22000,bag:true,bagPrice:6500,xs:"0",xsPrice:2500,hotelNight:5000,nights:7,room:"all",prepay:30,
+    def:{people:"2",wife:false,base:22000,bag:true,bagPrice:6500,xs:"0",xsPrice:2500,hotelNight:5000,nights:7,room:"all",prepay:30,
       transfer:2000,transferMode:"car",transferWays:"2",skiDays:6,pass:3300,guideDays:0,guideType:"full",guidePrice:10000,promo:false,halfPass:true,
       rent:"",rentDays:6,taxi:400,rides:2,food:2500,alco:1000,foodDays:7,extra:0}},
   sochi:{where:"На Красной Поляне",name:"Сочи",dest:"AER",airport:"Сочи",lat:43.68,open:"12-10",close:"04-20",
     snow:[["12-10",.3],["12-25",.55],["01-10",.75],["02-01",.9],["02-20",1],["03-10",.9],["03-31",.65],["04-12",.4],["04-20",.2]],
     notes:{12:"Открытие, снег не гарантирован",1:"Снег стабильный, на праздники дорого",2:"Лучший снег",3:"Хорошо, к концу месяца весна",4:"Весна, внизу тает"},
-    airlines:["SU","DP","U6","UT"],bags:{SU:5800,DP:4000,U6:4400,UT:5000},xs:2500,
-    bagHint:"Доплаты за багаж и лыжи примерные: у Победы и ЮТэйр лыжи оформляются отдельно, у Аэрофлота — тариф с багажом.",
+    bag:6200,
+    bagHint:"Доплата по живому поиску Aviasales на декабрь: S7 около 6 040 ₽, Аэрофлот около 6 260 ₽ с человека туда-обратно. У Победы лыжи оформляются отдельно.",
     transferLbl:"Трансфер аэропорт ⇄ Красная Поляна, ₽",hotelHint:"Роза Хутор / Красная Поляна. До Поляны можно и на «Ласточке» (~300 ₽ с человека). Цены примерные.",
     guideLbl:"Фрирайд с гидом, дней",guideNeedsPass:true,half:false,promo:false,
     est:{hotel:1,pass:1,transfer:1},foodMin:3500,alcoMin:1000,
-    def:{people:"2",wife:false,airline:"SU",base:13000,bag:true,bagPrice:5800,xs:"0",xsPrice:2500,hotelNight:8000,nights:7,room:"all",prepay:30,
+    def:{people:"2",wife:false,base:13000,bag:true,bagPrice:6200,xs:"0",xsPrice:2500,hotelNight:8000,nights:7,room:"all",prepay:30,
       transfer:3500,transferMode:"car",transferWays:"2",skiDays:6,pass:4500,guideDays:2,guideType:"full",guidePrice:12000,promo:false,halfPass:true,
       rent:"",rentDays:6,taxi:0,rides:0,food:4000,alco:1500,foodDays:7,extra:0}},
   elbrus:{where:"На Эльбрусе",name:"Эльбрус",dest:"MRV",airport:"Минеральные Воды",lat:43.3,open:"12-01",close:"05-10",
     snow:[["12-01",.35],["12-20",.6],["01-15",.72],["02-01",.85],["02-20",.95],["03-15",1],["04-01",.9],["04-20",.7],["05-10",.35]],
     notes:{12:"Открытие, бывают сильные ветра",1:"Холодно и ветрено наверху",2:"Хорошо",3:"Лучшее время, много солнца",4:"Весна, наверху ещё отлично",5:"Конец сезона"},
-    airlines:["SU","DP","U6","UT"],bags:{SU:5800,DP:4000,U6:4400,UT:5000},xs:2500,
-    bagHint:"Ближайший аэропорт с прямыми рейсами из Москвы — Минводы, до Терскола около 3,5 часа. Доплаты за багаж примерные.",
+    bag:6200,
+    bagHint:"Ближайший аэропорт с прямыми рейсами из Москвы — Минводы, до Терскола около 3,5 часа. Доплата за багаж примерная, как в Сочи.",
     transferLbl:"Трансфер Минводы ⇄ Терскол, ₽",hotelHint:"Терскол / Азау. Цены отеля, гида и трансфера примерные.",
     guideLbl:"Гид, дней",guideNeedsPass:true,half:false,promo:false,
     est:{hotel:1,pass:1,guide:1,transfer:1},foodMin:2000,alcoMin:700,
-    def:{people:"2",wife:false,airline:"SU",base:14000,bag:true,bagPrice:5800,xs:"0",xsPrice:2500,hotelNight:4500,nights:7,room:"all",prepay:30,
+    def:{people:"2",wife:false,base:14000,bag:true,bagPrice:6200,xs:"0",xsPrice:2500,hotelNight:4500,nights:7,room:"all",prepay:30,
       transfer:12000,transferMode:"car",transferWays:"2",skiDays:6,pass:3000,guideDays:2,guideType:"full",guidePrice:10000,promo:false,halfPass:true,
       rent:"",rentDays:6,taxi:500,rides:2,food:2500,alco:1000,foodDays:7,extra:0}},
 };
@@ -442,7 +440,7 @@ const DATEF=["from","to","tmin","tmax"];
 const DEF_DATES={from:"2026-11-20",to:"2027-02-28",tmin:7,tmax:10,trip:"2026-12-01|2026-12-08"};
 
 /* Состояние: общие даты + у каждого курорта свои поля и свои даты (когда общие выключены) */
-const KEY="gory-state-v5", PKEY="gory-prices-v1";
+const KEY="gory-state-v5", PKEY="gory-prices-v2";
 const clone=o=>JSON.parse(JSON.stringify(o));
 function fresh(){
   const r={};IDS.forEach(id=>{r[id]={...clone(RES[id].def),fareFor:"",dates:clone(DEF_DATES)}});
@@ -451,12 +449,13 @@ function fresh(){
 /* Старый формат (только Шерегеш, v4) → новый */
 function migrate(s){
   if(s&&s.v===5){const f=fresh();f.tab=s.tab||f.tab;f.shareDates=s.shareDates!==false;f.dates={...f.dates,...s.dates};
-    IDS.forEach(id=>{if(s.r&&s.r[id])f.r[id]={...f.r[id],...s.r[id],dates:{...f.r[id].dates,...(s.r[id].dates||{})}}});return f}
+    IDS.forEach(id=>{if(s.r&&s.r[id])f.r[id]={...f.r[id],...s.r[id],dates:{...f.r[id].dates,...(s.r[id].dates||{})}}});
+    ["sochi","elbrus"].forEach(id=>{if(+f.r[id].bagPrice===5800)f.r[id].bagPrice=6200}); /* старая примерная доплата */
+    return f}
   const f=fresh();if(!s)return f;
   const r=f.r.sheregesh,n=parseFloat(s.nights)||7;
   const map={people:"people",base:"base",bagPrice:"bagPrice",xs:"xs",xsPrice:"xsPrice",nights:"nights",transfer:"transfer",transferWays:"transferWays",skiDays:"skiDays",pass:"pass",frDays:"guideDays",frType:"guideType",frPrice:"guidePrice",promo:"promo",halfPass:"halfPass",taxi:"taxi",taxiRides:"rides",food:"food",foodDays:"foodDays",extra:"extra"};
   for(const k in map)if(k in s)r[map[k]]=s[k];
-  if(s.airline)r.airline={su:"SU",s7:"S7",own:"own"}[s.airline]||"SU";
   if("bag" in s)r.bag=s.bag!=="none";
   if("hotel" in s)r.hotelNight=Math.round((parseFloat(s.hotel)||0)/n*100)/100;
   r.alco=0; /* в старых расчётах алкоголя не было */
@@ -524,7 +523,6 @@ document.addEventListener("pointermove",e=>{
 document.addEventListener("pointerleave",()=>tip.hidden=true);
 
 /* Расчёт курорта: всё в рублях на меня (на меня и жену, если едем вдвоём) */
-const bagFee=(id,code)=>{const r=S.r[id];if(r.airline===code)return r.bag?nz(r.bagPrice):0;return RES[id].bags[code]||0};
 function calc(id){
   const R=RES[id],r=S.r[id],[ta,tb]=tripOf(id);
   const my=r.wife?2:1, N=Math.max(parseInt(r.people,10)||1,my), cars=Math.ceil(N/4);
@@ -543,9 +541,9 @@ function calc(id){
     hotel, transfer:trOne*ways, pass:passDays*nz(r.pass)*my, guide:gPaid*nz(r.guidePrice)*my,
     rent:nz(r.rent)*nz(r.rentDays)*my, taxi, food:nz(r.food)*nz(r.foodDays)*my, alco:nz(r.alco)*nz(r.foodDays)*my, extra:nz(r.extra)*my,
   };
-  const airName=AL[r.airline]||r.airline;
+  const src=r.own?"ваша цена":"ориентир Aviasales";
   const rows=[
-    {n:`Билет, ${airName}`,d:`туда-обратно, без багажа${x2}`,v:v.ticket},
+    {n:"Билет",d:`туда-обратно, без багажа, ${src}${x2}`,v:v.ticket},
     {n:"Багаж и инвентарь",d:r.bag?`туда-обратно${x2}`:"не берём",v:v.bag},
     {n:"Место с доп. пространством",d:xsN?`${xsN} × ${fmt(nz(r.xsPrice))}${x2}`:"",v:v.xs,hideZero:true},
     {n:"Отель",d:`${nights} ${plural(nights,"ночь","ночи","ночей")} × ${fmt(nz(r.hotelNight))}${r.wife?", отдельный номер":r.room==="all"&&N>1?`, ÷ ${N}`:""}`,v:v.hotel},
@@ -589,11 +587,12 @@ function calc(id){
     const ts=tripScore(id,ta,tb);if(ts!=null&&ts<.5)W.push(`Условия в эти даты: ${verdict(ts)}. Посмотрите на полоску сезона, зелёные даты лучше.`);
     if(id==="kirovsk"){const h=dayLen(R.lat,ta);if(h<4)W.push(`Полярная ночь: в эти даты светло ${h<.1?"всего пару часов сумерек":`около ${h.toFixed(1).replace(".",",")} ч`}. Катание в основном под фонарями.`)}
     const ny1=new Date(2026,11,29),ny2=new Date(2027,0,9);if(ta<=ny2&&tb>=ny1)W.push({i:1,t:"Новогодние праздники: отель и ски-пасс обычно дороже, чем в расчёте."});
-    if(r.airline!=="own"&&r.fareFor!==DT(id).trip)W.push(`Цена билета не для выбранных дат. Нажмите «Проверить цены» или выберите вариант в таблице.`);
+    if(r.fareFor!==DT(id).trip)W.push(`Цена билета не для выбранных дат. Нажмите «Проверить цены», выберите вариант в таблице или впишите свою.`);
+    else if(!r.own)W.push({i:1,t:"Билет — ориентир по кэшу Aviasales, реальная цена может отличаться. Проверьте по ссылке и при желании впишите свою."});
   }
   if(N>4)W.push({i:1,t:`Вас ${N}: в такси 4 места, считаю ${cars} машины.`});
   if(R.est.hotel||R.est.pass)W.push({i:1,t:`Цены ${[R.est.hotel&&"отеля",R.est.pass&&"ски-пасса",R.est.guide&&"гида",R.est.transfer&&"трансфера"].filter(Boolean).join(", ")} примерные — поправьте, когда узнаете точные.`});
-  return {rows,total,v,pay,warns:W.map(w=>typeof w==="string"?{t:w}:w),my,N,ta,tb,airName,nights,ski,gd,half,passDays};
+  return {rows,total,v,pay,warns:W.map(w=>typeof w==="string"?{t:w}:w),my,N,ta,tb,src,nights,ski,gd,half,passDays};
 }
 
 /* Отрисовка вкладок */
@@ -609,17 +608,16 @@ function fillForm(id){
   $("shareDates").checked=S.shareDates;
   DATEF.forEach(k=>$(k).value=dt[k]);
   FIELDS.forEach(k=>{const el=$(k);if(el.type==="checkbox")el.checked=!!r[k];else el.value=r[k]});
-  $("airline").innerHTML=[...R.airlines,"own"].map(c=>`<button type="button" data-v="${c}" class="${r.airline===c?"on":""}">${AL[c]}</button>`).join("");
   $("flightTitle").textContent=`Перелёт Москва ⇄ ${R.airport}`;
   $("transferLbl").textContent=R.transferLbl;
   $("guideLbl").textContent=R.guideLbl;
   $("guideTypeWrap").hidden=!R.half;$("promoWrap").hidden=!R.promo;$("halfPassWrap").hidden=!R.half;
   $("bagHint").textContent=R.bagHint;$("hotelHint").textContent=R.hotelHint;
-  $("bagEst").textContent=R.bagsExact?"":"примерно";
+  $("bagEst").textContent=R.bagExact?"":"примерно";
   $("hotelEst").textContent=R.est.hotel?"примерно":"";$("passEst").textContent=R.est.pass?"примерно":"";
   $("guideEst").textContent=R.est.guide?"примерно":"";$("transferEst").textContent=R.est.transfer?"примерно":"";
   $("room").disabled=!!r.wife;
-  $("pricesHint").textContent=`Прямые рейсы из Москвы в ${R.airport}: ${R.airlines.map(c=>AL[c]).join(", ")}. Ищу все варианты в вашем окне дат. Цена туда-обратно на 1 человека: крупно с багажом, мелко без багажа. Нажмите на цену, чтобы подставить её.`;
+  $("pricesHint").textContent=`Ориентир по кэшу Aviasales: самый дешёвый прямой рейс Москва ⇄ ${R.airport} на каждые даты в вашем окне, любая авиакомпания, туда-обратно на 1 человека. Крупно — с доплатой за багаж из поля ниже, мелко — без багажа. Нажмите на цену, чтобы подставить её. Реальную цену проверьте по ссылке и при желании впишите свою в поле «Билет».`;
 }
 
 /* Состояние ← поле формы */
@@ -637,7 +635,7 @@ function renderResort(){
   $("totalLbl").textContent=c.my>1?"Мои траты: я и жена":"На одного";
   $("colLbl").textContent=c.my>1?"За двоих":"На 1 чел.";
   $("perPerson").textContent=fmt(c.total);
-  $("tripLine").textContent=`${c.airName}${tt?`, ${tt}`:""}${c.my>1?` · на человека ${fmt(c.total/2)}`:""}`;
+  $("tripLine").textContent=`${tt||""}${tt?", ":""}билет: ${c.src}${c.my>1?` · на человека ${fmt(c.total/2)}`:""}`;
   $("ledger").innerHTML=c.rows.map(x=>`<tr class="${x.v?"":"zero"}"><td>${x.n}${x.d?`<small>${x.d}</small>`:""}</td><td>${fmt(x.v)}</td></tr>`).join("")+`<tr><td><b>Итого</b></td><td><b>${fmt(c.total)}</b></td></tr>`;
   $("warns").innerHTML=c.warns.map(w=>`<li class="${w.i?"info":""}">${esc(w.t)}</li>`).join("");
   const mx=Math.max(...c.pay.map(p=>p.v),1);
@@ -646,7 +644,7 @@ function renderResort(){
   $("season").innerHTML=seasonBar(id);
   const ts=c.ta&&c.tb?tripScore(id,c.ta,c.tb):null;
   $("seasonHint").textContent=`Наведите на полоску, чтобы увидеть условия по датам. Оценки примерные: снег${id==="kirovsk"?" и световой день (нижняя полоска)":""}.${ts!=null?` Ваши даты: ${verdict(ts)}.`:""}${S.shareDates?" Даты общие для всех курортов.":""}`;
-  const P=c.N,dm=d=>`${String(d.getDate()).padStart(2,"0")}${String(d.getMonth()+1).padStart(2,"0")}`;
+  const P=c.my,dm=d=>`${String(d.getDate()).padStart(2,"0")}${String(d.getMonth()+1).padStart(2,"0")}`;
   if(c.ta&&c.tb){$("avsLink").href=`https://www.aviasales.ru/search/MOW${dm(c.ta)}${R.dest}${dm(c.tb)}${P}`;$("avsLink").textContent=`Открыть Aviasales на ${short(c.ta)} – ${short(c.tb)} ↗`}
   let html="";
   for(let i=0;i<c.ski;i++){const cls=i<c.gd?(c.half?"half":"fr"):"lift";
@@ -656,47 +654,42 @@ function renderResort(){
   renderPrices();
 }
 
-/* Цены Aviasales */
-const withBag=(id,p,code)=>p.fares[code]==null?null:p.fares[code]+bagFee(id,code);
-const bestOf=(id,p)=>{const cs=Object.keys(p.fares).filter(k=>p.fares[k]!=null);if(!cs.length)return null;return cs.reduce((x,y)=>withBag(id,p,x)<=withBag(id,p,y)?x:y)};
+/* Цены Aviasales: ориентир — самый дешёвый прямой рейс на даты, любая авиакомпания */
+const KEYP=p=>`${p.depart}|${p.ret}`;
+const bagOf=id=>S.r[id].bag?nz(S.r[id].bagPrice):0;
 function renderPrices(){
   const id=S.tab,pr=PR[id],box=$("fares"),st=$("status");
-  if(!pr||!pr.prices){box.innerHTML="";st.hidden=true;return}
-  const k0=DT(id).trip,r=S.r[id];
+  if(!pr||!Array.isArray(pr.prices)||pr.prices.some(p=>p.price==null)){box.innerHTML="";st.hidden=true;return}
+  const k0=DT(id).trip,r=S.r[id],bf=bagOf(id);
   const t=new Date(pr.fetchedAt);
   st.hidden=false;st.className="status";
   st.textContent=pr.prices.length?`${pr.prices.length} ${plural(pr.prices.length,"вариант","варианта","вариантов")} с ${short(parseD(pr.from))} по ${short(parseD(pr.to))}, ${pr.tmin}–${pr.tmax} дней. Обновлено ${t.toLocaleDateString("ru-RU",{day:"numeric",month:"short"})} в ${t.toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit",second:"2-digit"})}.${pr.note?" "+pr.note:""}`:"Aviasales не вернул прямых рейсов в этом окне дат.";
-  const al=pr.airlines||RES[id].airlines;
-  const list=pr.prices.filter(p=>bestOf(id,p)).sort((a,b)=>withBag(id,a,bestOf(id,a))-withBag(id,b,bestOf(id,b)));
+  const list=pr.prices.slice().sort((a,b)=>a.price-b.price);
   if(!list.length){box.innerHTML="";return}
-  const cell=(p,code)=>{if(p.fares[code]==null)return `<td class="na">—</td>`;
-    const on=k0===`${p.depart}|${p.ret}`&&r.airline===code;
-    return `<td><button type="button" class="pick${on?" on":""}" data-k="${p.depart}|${p.ret}" data-a="${code}" title="Подставить в расчёт"><b>${fmt(withBag(id,p,code))}</b><small>без багажа ${fmt(p.fares[code])}</small></button></td>`};
-  const rowsH=list.map(p=>{const a=parseD(p.depart),b=parseD(p.ret),ts=tripScore(id,a,b);
-    return `<tr class="${k0===`${p.depart}|${p.ret}`?"mine":""}"><td><span class="dot" style="background:${col(ts)}" title="Условия: ${verdict(ts)}"></span>${short(a)} – ${short(b)}</td><td>${p.days}</td>${al.map(c=>cell(p,c)).join("")}</tr>`}).join("");
-  box.innerHTML=`<div class="ptable"><table><thead><tr><th>Даты</th><th>Дней</th>${al.map(c=>`<th>${AL[c]}</th>`).join("")}</tr></thead><tbody>${rowsH}</tbody></table></div><p class="hint" style="margin-top:6px">Кружок у дат — условия сезона в эти дни.</p>`;
+  const rowsH=list.map(p=>{const a=parseD(p.depart),b=parseD(p.ret),ts=tripScore(id,a,b),k=KEYP(p),on=k0===k&&r.fareFor===k&&!r.own;
+    return `<tr class="${k0===k?"mine":""}"><td><span class="dot" style="background:${col(ts)}" title="Условия: ${verdict(ts)}"></span>${short(a)} – ${short(b)}</td><td>${p.days}</td><td><button type="button" class="pick${on?" on":""}" data-k="${k}" title="Подставить в расчёт"><b>${fmt(p.price+bf)}</b><small>без багажа ${fmt(p.price)}</small></button></td></tr>`}).join("");
+  box.innerHTML=`<div class="ptable"><table><thead><tr><th>Даты</th><th>Дней</th><th>${bf?"С багажом, примерно":"Без багажа"}</th></tr></thead><tbody>${rowsH}</tbody></table></div><p class="hint" style="margin-top:6px">Кружок у дат — условия сезона в эти дни.</p>`;
 }
 $("fares").addEventListener("click",e=>{
   const b=e.target.closest(".pick"),id=S.tab;if(!b||!PR[id])return;
-  const p=PR[id].prices.find(x=>`${x.depart}|${x.ret}`===b.dataset.k);if(p){applyFare(id,p,b.dataset.a);PR[id].note="";persistPrices();persist();renderAll(true)}
+  const p=PR[id].prices.find(x=>KEYP(x)===b.dataset.k);if(p){applyFare(id,p);PR[id].note="";persistPrices();persist();renderAll(true)}
 });
 function setTrip(id,p){
   const r=S.r[id];
-  DT(id).trip=`${p.depart}|${p.ret}`;
+  DT(id).trip=KEYP(p);
   r.nights=p.days;r.skiDays=Math.max(0,p.days-1);r.foodDays=p.days;r.rentDays=Math.max(0,p.days-1);
 }
-function applyFare(id,p,code){
+function applyFare(id,p){
   const r=S.r[id];
-  if(r.airline!==code){r.airline=code;r.bagPrice=RES[id].bags[code]||0}
-  r.base=p.fares[code];setTrip(id,p);r.fareFor=`${p.depart}|${p.ret}`;
+  r.base=p.price;r.own=false;setTrip(id,p);r.fareFor=KEYP(p);
   if(S.shareDates)IDS.filter(o=>o!==id).forEach(o=>syncTrip(o,p.days));
 }
-/* Общие даты поменялись: подтянуть у курорта цену билета на эти даты, если она есть */
+/* Общие даты поменялись: подтянуть у курорта ориентир цены на эти даты, если он есть */
 function syncTrip(id,days){
   const r=S.r[id],k=S.dates.trip;
   if(days){r.nights=days;r.skiDays=Math.max(0,days-1);r.foodDays=days;r.rentDays=Math.max(0,days-1)}
-  const p=PR[id]&&PR[id].prices&&PR[id].prices.find(x=>`${x.depart}|${x.ret}`===k);
-  if(p){const c=p.fares[r.airline]!=null?r.airline:bestOf(id,p);if(c){if(r.airline!==c){r.airline=c;r.bagPrice=RES[id].bags[c]||0}r.base=p.fares[c];r.fareFor=k}}
+  const p=PR[id]&&Array.isArray(PR[id].prices)&&PR[id].prices.find(x=>KEYP(x)===k&&x.price!=null);
+  if(p&&!(r.own&&r.fareFor===k)){r.base=p.price;r.own=false;r.fareFor=k}
 }
 async function fetchPrices(id){
   const dt=DT(id);
@@ -704,14 +697,14 @@ async function fetchPrices(id){
   const r=await fetch("/api/prices?"+qs,{cache:"no-store"});
   if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||("код "+r.status))}
   const j=await r.json();
-  PR[id]={prices:(j.prices||[]).filter(p=>Object.keys(p.fares).length),airlines:j.airlines,fetchedAt:j.fetchedAt||new Date().toISOString(),from:dt.from,to:dt.to,tmin:dt.tmin,tmax:dt.tmax};
-  persistPrices();
-  /* Есть цена на выбранные даты — обновляем её, нет — берём самый дешёвый вариант с багажом */
-  const k=DT(id).trip,list=PR[id].prices,same=list.find(p=>`${p.depart}|${p.ret}`===k);
-  if(same){const c=same.fares[S.r[id].airline]!=null?S.r[id].airline:bestOf(id,same);applyFare(id,same,c);PR[id].note=`Цена на ваши даты ${short(parseD(same.depart))}–${short(parseD(same.ret))} обновлена.`}
-  else if(list.length&&!(S.shareDates&&id!==S.tab)){let best=null,bc=null;for(const p of list){const c=bestOf(id,p);if(c&&(!best||withBag(id,p,c)<withBag(id,best,bc))){best=p;bc=c}}
-    applyFare(id,best,bc);PR[id].note=`На ваши даты прямых рейсов нет, подставлен самый дешёвый с багажом: ${AL[bc]}, ${short(parseD(best.depart))}–${short(parseD(best.ret))}.`}
-  else PR[id].note=list.length?"На общие даты прямых рейсов нет — выберите вариант в таблице этого курорта.":"";
+  PR[id]={prices:(j.prices||[]).filter(p=>p.price>0),fetchedAt:j.fetchedAt||new Date().toISOString(),from:dt.from,to:dt.to,tmin:dt.tmin,tmax:dt.tmax};
+  /* Есть цена на выбранные даты — обновляем её (если вы не вписали свою), нет — берём самый дешёвый вариант */
+  const rr=S.r[id],k=DT(id).trip,list=PR[id].prices,same=list.find(p=>KEYP(p)===k),dd=p=>`${short(parseD(p.depart))}–${short(parseD(p.ret))}`;
+  if(same&&rr.own&&rr.fareFor===k)PR[id].note=`На ваши даты ${dd(same)} оставлена ваша цена, ориентир Aviasales — ${fmt(same.price)} без багажа.`;
+  else if(same){applyFare(id,same);PR[id].note=`Ориентир на ваши даты ${dd(same)} обновлён.`}
+  else if(list.length&&!(S.shareDates&&id!==S.tab)){const best=list.reduce((a,b)=>b.price<a.price?b:a);
+    applyFare(id,best);PR[id].note=`На ваши даты в кэше Aviasales цены нет, подставлен самый дешёвый вариант: ${dd(best)}.`}
+  else PR[id].note=list.length?"На общие даты в кэше Aviasales цены нет — выберите вариант в таблице этого курорта.":"";
   persistPrices();
 }
 async function loadPrices(){
@@ -742,7 +735,7 @@ function renderCompare(){
     return `<tr class="${c.total===min?"best":""}"><td><a data-t="${id}">${RES[id].name}</a>${c.my>1?"<small>с женой</small>":""}</td>
     <td class="tot">${fmt(c.total)}${c.warns.filter(w=>!w.i).length?`<small>⚠ ${c.warns.filter(w=>!w.i).length}</small>`:""}</td>
     <td>${c.ta&&c.tb?`<span class="dot" style="background:${col(ts)}"></span>${short(c.ta)}–${short(c.tb)}<small>${verdict(ts)}</small>`:"—"}</td>
-    <td>${fmt(v.ticket+v.bag+v.xs)}<small>${c.airName}</small></td><td>${fmt(v.hotel)}</td><td>${fmt(v.pass)}</td><td>${fmt(v.guide)}</td><td>${fmt(v.rent)}</td>
+    <td>${fmt(v.ticket+v.bag+v.xs)}<small>${c.src}</small></td><td>${fmt(v.hotel)}</td><td>${fmt(v.pass)}</td><td>${fmt(v.guide)}</td><td>${fmt(v.rent)}</td>
     <td>${fmt(v.food+v.alco)}</td><td>${fmt(v.transfer+v.taxi)}</td><td>${fmt(now)}</td><td>${fmt(site)}</td></tr>`}).join("");
   $("cmpHint").textContent="Суммы на одного (или на вас с женой, если стоит галка). «Заплатить сейчас» — билеты и предоплата отеля. ⚠ — есть предупреждения, они видны во вкладке курорта.";
   $("cmpSeason").innerHTML=`<span class="lbl">Сезон и выбранные даты</span>`+IDS.map(id=>seasonBar(id,{name:1})).join("");
@@ -763,6 +756,7 @@ function onInput(k){
   const id=S.tab;if(id==="compare")return;
   readField(k);
   const r=S.r[id];
+  if(k==="base"){r.own=true;r.fareFor=DT(id).trip}
   if(k==="guideType"){r.guidePrice=r.guideType==="half"?6000:12000;$("guidePrice").value=r.guidePrice}
   if(k==="wife"){if(r.wife&&(parseInt(r.people,10)||1)<2){r.people="2";$("people").value="2"}$("room").disabled=!!r.wife}
   if(DATEF.includes(k)&&k!=="trip"){/* окно дат меняет только поиск; выбранный перелёт остаётся */}
@@ -773,13 +767,6 @@ $("shareDates").addEventListener("change",()=>{
   const id=S.tab,on=$("shareDates").checked;
   if(on){S.dates=clone(S.r[id].dates);S.shareDates=true;IDS.forEach(o=>{if(o!==id)syncTrip(o,(()=>{const [a,b]=S.dates.trip.split("|").map(parseD);return a&&b?Math.round((b-a)/864e5):0})())})}
   else{IDS.forEach(o=>S.r[o].dates=clone(S.dates));S.shareDates=false}
-  persist();renderAll(true);
-});
-$("airline").addEventListener("click",e=>{
-  const b=e.target.closest("[data-v]");if(!b)return;const id=S.tab,r=S.r[id],c=b.dataset.v;
-  r.airline=c;r.bagPrice=c==="own"?0:(RES[id].bags[c]||0);
-  const k=DT(id).trip,p=PR[id]&&PR[id].prices&&PR[id].prices.find(x=>`${x.depart}|${x.ret}`===k);
-  if(c!=="own"&&p&&p.fares[c]!=null){r.base=p.fares[c];r.fareFor=k}
   persist();renderAll(true);
 });
 $("load").addEventListener("click",loadPrices);
