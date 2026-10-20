@@ -780,15 +780,15 @@ function renderResort(){
 function debtText(c){
   if(!c.debts.length)return "";
   const me=nm("me"),ot=nm("other"),per=c.others>1?` <small>по ${fmt(Math.abs(c.net)/c.others)} с каждого из ${c.others}</small>`:"";
-  if(Math.round(c.net)>0)return `${ot} ${c.others>1?"должны":"должен"} ${me}: ${fmt(c.net)}${per}`;
-  if(Math.round(c.net)<0)return `${me} ${c.others>1?"должен остальным":`должен ${ot}`}: ${fmt(-c.net)}`;
+  if(Math.round(c.net)>0)return `Долг: ${ot} → ${me}, ${fmt(c.net)}${per}`;
+  if(Math.round(c.net)<0)return `Долг: ${me} → ${ot}, ${fmt(-c.net)}`;
   return "Никто никому не должен";
 }
 function renderPayers(id,c){
   const PB=S.r[id].payBy||{},me=nm("me"),ot=nm("other");
   const cats=PAYCATS.filter(([k])=>c.v[k]||c.oth(k));
   $("payers").innerHTML=cats.map(([k,n])=>{const w=PB[k]||"self";
-    return `<span>${n} <small>· ${fmt(c.v[k])}${c.others?` + ${fmt(c.oth(k))}`:""}</small></span><select data-c="${k}" aria-label="Кто платит: ${n}"><option value="self"${w==="self"?" selected":""}>каждый сам</option><option value="me"${w==="me"?" selected":""}>${me} за всех</option>${c.others?`<option value="other"${w==="other"?" selected":""}>${ot} за всех</option>`:""}</select>`}).join("");
+    return `<span>${n} <small>· ${me} ${fmt(c.v[k])}${c.others?`, ${ot} ${fmt(c.oth(k))}`:""}</small></span><select data-c="${k}" aria-label="Кто платит: ${n}"><option value="self"${w==="self"?" selected":""}>каждый сам</option><option value="me"${w==="me"?" selected":""}>${me} за всех</option>${c.others?`<option value="other"${w==="other"?" selected":""}>${ot} за всех</option>`:""}</select>`}).join("");
   const dt=debtText(c);
   $("debt").innerHTML=dt?dt+`<small>${c.debts.map(([k,a])=>`${PAYCATS.find(x=>x[0]===k)[1]}: ${a>0?`${ot} → ${me}`:`${me} → ${ot}`} ${fmt(Math.abs(a))}`).join(" · ")}</small>`:(c.others?"Каждый платит сам за себя — долгов нет.":"Едете одни — делить нечего.");
   $("debtAside").hidden=!dt;$("debtAside").innerHTML=dt;
