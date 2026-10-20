@@ -227,7 +227,10 @@ button.primary:disabled{opacity:.6;cursor:progress}
   <section class="box">
     <h2><span class="mark g"></span>Жильё и трансфер</h2>
     <div class="row">
-      <label for="hotelNight">Номер за ночь, ₽ <span class="est" id="hotelEst"></span>
+      <label for="hotelMode">Цена отеля
+        <select id="hotelMode"><option value="total">за весь срок</option><option value="night">за ночь</option></select>
+      </label>
+      <label for="hotelNight"><span id="hotelLbl">Номер за весь срок, ₽</span> <span class="est" id="hotelEst"></span>
         <input id="hotelNight" type="number" min="0" step="100">
       </label>
       <label for="nights">Ночей
@@ -410,7 +413,7 @@ const RES={
     transferLbl:"Трансфер Новокузнецк ⇄ Шерегеш, ₽",hotelHint:"Апартаменты, Весенняя 36В: 7 ночей на двоих за 38 500 ₽.",
     guideLbl:"Фрирайд на ратраках, дней",guideNeedsPass:false,half:true,promo:true,
     est:{},foodMin:2500,alcoMin:800,
-    def:{people:"2",wife:false,base:36248,bag:true,xs:"0",xsPrice:3320,hotelNight:5500,nights:7,room:"all",prepay:30,
+    def:{people:"2",wife:false,base:36248,bag:true,xs:"0",xsPrice:3320,hotelNight:38500,hotelMode:"total",hotelNights:7,nights:7,room:"all",prepay:30,
       transfer:2800,transferMode:"person",transferWays:"2",skiDays:6,passType:"edin",passOwn:"",guideDays:2,guideType:"full",guidePrice:12000,promo:true,halfPass:true,
       rent:"",rentDays:6,taxi:300,rides:2,food:3000,alco:1000,foodDays:7,extra:0}},
   kirovsk:{where:"В Кировске",name:"Кировск",dest:"KVK",airport:"Апатиты",lat:67.6,open:"11-25",close:"05-31",
@@ -427,7 +430,7 @@ const RES={
     transferLbl:"Такси аэропорт Апатиты ⇄ Кировск, ₽",hotelHint:"Аэропорт Хибины в 30 минутах от Кировска. Цены отеля и гида примерные.",
     guideLbl:"Гид, дней",guideNeedsPass:true,half:false,promo:false,
     est:{hotel:1,guide:1,transfer:1},foodMin:2000,alcoMin:700,
-    def:{people:"2",wife:false,base:28572,bag:true,xs:"0",xsPrice:2500,hotelNight:5000,nights:7,room:"all",prepay:30,
+    def:{people:"2",wife:false,base:28572,bag:true,xs:"0",xsPrice:2500,hotelNight:35000,hotelMode:"total",hotelNights:7,nights:7,room:"all",prepay:30,
       transfer:2000,transferMode:"car",transferWays:"2",skiDays:6,passType:"bw",passOwn:"",guideDays:0,guideType:"full",guidePrice:10000,promo:false,halfPass:true,
       rent:"",rentDays:6,taxi:400,rides:2,food:2500,alco:1000,foodDays:7,extra:0}},
   sochi:{where:"На Красной Поляне",name:"Сочи",dest:"AER",airport:"Сочи",lat:43.68,open:"12-10",close:"04-20",
@@ -446,7 +449,7 @@ const RES={
     transferLbl:"Трансфер аэропорт ⇄ Красная Поляна, ₽",hotelHint:"Роза Хутор / Красная Поляна. До Поляны можно и на «Ласточке» (~300 ₽ с человека). Цены примерные.",
     guideLbl:"Фрирайд с гидом, дней",guideNeedsPass:true,half:false,promo:false,
     est:{hotel:1,transfer:1},foodMin:3500,alcoMin:1000,
-    def:{people:"2",wife:false,base:24393,bag:true,xs:"0",xsPrice:2500,hotelNight:8000,nights:7,room:"all",prepay:30,
+    def:{people:"2",wife:false,base:24393,bag:true,xs:"0",xsPrice:2500,hotelNight:56000,hotelMode:"total",hotelNights:7,nights:7,room:"all",prepay:30,
       transfer:3500,transferMode:"car",transferWays:"2",skiDays:6,passType:"rosa",passOwn:"",guideDays:2,guideType:"full",guidePrice:12000,promo:false,halfPass:true,
       rent:"",rentDays:6,taxi:0,rides:0,food:4000,alco:1500,foodDays:7,extra:0}},
   elbrus:{where:"На Эльбрусе",name:"Эльбрус",dest:"MRV",airport:"Минеральные Воды",lat:43.3,open:"12-01",close:"05-10",
@@ -462,12 +465,12 @@ const RES={
     transferLbl:"Трансфер Минводы ⇄ Терскол, ₽",hotelHint:"Терскол / Азау. Цены отеля, гида и трансфера примерные.",
     guideLbl:"Гид, дней",guideNeedsPass:true,half:false,promo:false,
     est:{hotel:1,guide:1,transfer:1},foodMin:2000,alcoMin:700,
-    def:{people:"2",wife:false,base:22679,bag:true,xs:"0",xsPrice:2500,hotelNight:4500,nights:7,room:"all",prepay:30,
+    def:{people:"2",wife:false,base:22679,bag:true,xs:"0",xsPrice:2500,hotelNight:31500,hotelMode:"total",hotelNights:7,nights:7,room:"all",prepay:30,
       transfer:12000,transferMode:"car",transferWays:"2",skiDays:6,passType:"pre",passOwn:"",guideDays:2,guideType:"full",guidePrice:10000,promo:false,halfPass:true,
       rent:"",rentDays:6,taxi:500,rides:2,food:2500,alco:1000,foodDays:7,extra:0}},
 };
 const IDS=Object.keys(RES);
-const FIELDS=Object.keys(RES.sheregesh.def).filter(k=>k!=="airline");
+const FIELDS=Object.keys(RES.sheregesh.def).filter(k=>document.getElementById(k)); /* служебные поля вроде hotelNights в форме не показываются */
 const DATEF=["from","to","tmin","tmax"];
 const DEF_DATES={from:"2026-11-20",to:"2027-02-28",tmin:7,tmax:10,trip:"2026-12-01|2026-12-08"};
 
@@ -485,6 +488,7 @@ function migrate(s){
       f.r[id]={...f.r[id],...sr,dates:{...f.r[id].dates,...(sr.dates||{})}};
       /* раньше доплата за багаж была отдельным полем — теперь она внутри цены билета */
       if(!sr.bagIn&&sr.bag!==false)f.r[id].base=nz(sr.base)+(sr.own?nz(sr.bagPrice):RES[id].bag);
+      if(!sr.hotelMode)f.r[id].hotelMode="night"; /* раньше цена отеля всегда была за ночь */
       f.r[id].bagIn=true;delete f.r[id].bagPrice;delete f.r[id].pass});
     return f}
   const f=fresh();if(!s)return f;
@@ -492,7 +496,7 @@ function migrate(s){
   const map={people:"people",base:"base",bagPrice:"bagPrice",xs:"xs",xsPrice:"xsPrice",nights:"nights",transfer:"transfer",transferWays:"transferWays",skiDays:"skiDays",pass:"pass",frDays:"guideDays",frType:"guideType",frPrice:"guidePrice",promo:"promo",halfPass:"halfPass",taxi:"taxi",taxiRides:"rides",food:"food",foodDays:"foodDays",extra:"extra"};
   for(const k in map)if(k in s)r[map[k]]=s[k];
   if("bag" in s)r.bag=s.bag!=="none";
-  if("hotel" in s)r.hotelNight=Math.round((parseFloat(s.hotel)||0)/n*100)/100;
+  if("hotel" in s){r.hotelNight=parseFloat(s.hotel)||0;r.hotelMode="total";r.hotelNights=n}
   r.alco=0; /* в старых расчётах алкоголя не было */
   if(s.hotelSplit==="1")r.room="one";
   if(s.trip){f.dates.trip=s.trip;r.fareFor=s.trip}
@@ -587,7 +591,7 @@ function calc(id){
   const passDays=R.guideNeedsPass?ski:half?(ski-gd)+(r.halfPass?gd:0):ski-gd;
   const PS=passOf(id,passDays,ta);
   const xsN=parseInt(r.xs,10)||0, ways=parseInt(r.transferWays,10)||0;
-  const hotelTotal=nz(r.hotelNight)*nights;
+  const byTotal=r.hotelMode==="total", hotelTotal=byTotal?nz(r.hotelNight):nz(r.hotelNight)*nights;
   const hotel=r.wife||r.room==="one"?hotelTotal:hotelTotal/N;
   const trOne=r.transferMode==="car"?nz(r.transfer)*cars/N*my:nz(r.transfer)*my;
   const taxiAll=ski*nz(r.rides)*nz(r.taxi)*cars, taxi=taxiAll/N*my;
@@ -601,7 +605,7 @@ function calc(id){
   const rows=[
     {n:r.bag?"Билет с багажом":"Билет без багажа",d:`туда-обратно, ${src}${x2}`,v:v.ticket},
     {n:"Место с доп. пространством",d:xsN?`${xsN} × ${fmt(nz(r.xsPrice))}${x2}`:"",v:v.xs,hideZero:true},
-    {n:"Отель",d:`${nights} ${plural(nights,"ночь","ночи","ночей")} × ${fmt(nz(r.hotelNight))}${r.wife?", отдельный номер":r.room==="all"&&N>1?`, ÷ ${N}`:""}`,v:v.hotel},
+    {n:"Отель",d:`${byTotal?`${fmt(hotelTotal)} за ${nights} ${plural(nights,"ночь","ночи","ночей")}`:`${nights} ${plural(nights,"ночь","ночи","ночей")} × ${fmt(nz(r.hotelNight))}`}${r.wife?", отдельный номер":r.room==="all"&&N>1?`, ÷ ${N}`:""}`,v:v.hotel},
     {n:"Трансфер",d:ways?`${ways} × ${fmt(nz(r.transfer))}${r.transferMode==="car"?` за машину${cars>1?` × ${cars}`:""}, ÷ ${N}${my>1?" × 2":""}`:x2}`:"",v:v.transfer,hideZero:true},
     {n:"Ски-пасс",d:`${passDays} ${plural(passDays,"день","дня","дней")}, ${PS.ps.n}${PS.period!=="low"?`, ${PERN[PS.period]}`:""}${PS.own?", ваша цена":""}${x2}`,v:v.pass},
     {n:R.guideLbl.replace(", дней",""),d:gd?`${gd} ${plural(gd,"день","дня","дней")}${half?" по полдня":""}${gd-gPaid?`, ${gd-gPaid} бесплатно`:""}${x2}`:"",v:v.guide,hideZero:true},
@@ -634,6 +638,7 @@ function calc(id){
   if(alco>0&&alco<R.alcoMin)W.push(`На алкоголь ${fmt(alco)} в день — это примерно пара бокалов пива в баре. Нормально, если не планируете вечеринок.`);
   if(!alco)W.push({i:1,t:"Алкоголь не заложен. Если планируете бар после катания, добавьте сумму в день."});
   if(nz(r.guideDays)>ski)W.push(`Дней с гидом ${nz(r.guideDays)}, а катания всего ${ski}. Считаю ${ski}.`);
+  if(byTotal&&r.hotelNights&&+r.hotelNights!==nights)W.push(`Цена отеля введена за ${r.hotelNights} ${plural(+r.hotelNights,"ночь","ночи","ночей")}, а сейчас ночей ${nights}. Обновите цену отеля за весь срок.`);
   if(ski>nights)W.push(`Дней катания (${ski}) больше, чем ночей (${nights}).`);
   if(nz(r.foodDays)<nights)W.push({i:1,t:`Еда посчитана на ${nz(r.foodDays)} дн., а ночей ${nights}.`});
   if(!r.bag)W.push("Без багажа: лыжи или сноуборд не полетят, придётся брать аренду.");
@@ -669,6 +674,7 @@ function fillForm(id){
   $("guideTypeWrap").hidden=!R.half;$("promoWrap").hidden=!R.promo;$("halfPassWrap").hidden=!R.half;
   $("bagHint").textContent=R.bagHint;$("hotelHint").textContent=R.hotelHint;
   $("hotelEst").textContent=R.est.hotel?"примерно":"";
+  $("hotelLbl").textContent=r.hotelMode==="total"?"Номер за весь срок, ₽":"Номер за ночь, ₽";
   $("passType").innerHTML=R.passes.map(x=>`<option value="${x.id}">${x.n}</option>`).join("");$("passType").value=r.passType;
   $("baseLbl").textContent=r.bag?"Билет с багажом, туда-обратно, ₽ / чел.":"Билет без багажа, туда-обратно, ₽ / чел.";
   $("guideEst").textContent=R.est.guide?"примерно":"";$("transferEst").textContent=R.est.transfer?"примерно":"";
@@ -815,6 +821,10 @@ function onInput(k){
   readField(k);
   const r=S.r[id];
   if(k==="base"){r.own=true;r.fareFor=DT(id).trip}
+  if(k==="hotelMode"){const n=Math.max(1,Math.round(nz(r.nights)));
+    r.hotelNight=r.hotelMode==="total"?Math.round(nz(r.hotelNight)*n):Math.round(nz(r.hotelNight)/n);r.hotelNights=n;
+    $("hotelNight").value=r.hotelNight;$("hotelLbl").textContent=r.hotelMode==="total"?"Номер за весь срок, ₽":"Номер за ночь, ₽"}
+  if(k==="hotelNight"&&r.hotelMode==="total")r.hotelNights=Math.round(nz(r.nights));
   if(k==="bag"){r.base=Math.max(0,nz(r.base)+(r.bag?1:-1)*RES[id].bag);$("base").value=r.base;
     $("baseLbl").textContent=r.bag?"Билет с багажом, туда-обратно, ₽ / чел.":"Билет без багажа, туда-обратно, ₽ / чел."}
   if(k==="guideType"){r.guidePrice=r.guideType==="half"?6000:12000;$("guidePrice").value=r.guidePrice}
