@@ -957,7 +957,7 @@ const PARTN=k=>k==="dates"?"даты":k==="meta"?"имена":RES[k.slice(2)]?RE
 const canon=o=>JSON.stringify(o,(k,v)=>v&&typeof v==="object"&&!Array.isArray(v)?Object.keys(v).sort().reduce((a,x)=>(a[x]=v[x],a),{}):v);
 const DEFP=(()=>{const f=fresh(),o={dates:{shareDates:f.shareDates,dates:f.dates},meta:f.meta};IDS.forEach(id=>o["r:"+id]=f.r[id]);return o})();
 function partsOf(){const o={dates:{shareDates:S.shareDates,dates:S.dates},meta:S.meta};IDS.forEach(id=>o["r:"+id]=S.r[id]);return o}
-function changedParts(){const o=partsOf(),out={};for(const k in o){if(SY.synced[k]!==JSON.stringify(o[k]))out[k]=o[k]}return out}
+function changedParts(){const o=partsOf(),out={};for(const k in o){if(SY.synced[k]!==canon(o[k]))out[k]=o[k]}return out}
 function schedulePush(){if(!syncReady)return;clearTimeout(pushT);pushT=setTimeout(()=>push(),4000);renderSync()}
 async function push(beacon){
   clearTimeout(pushT);pushT=null;
@@ -968,7 +968,7 @@ async function push(beacon){
     const r=await fetch("/api/live",{method:"POST",headers:{"content-type":"application/json"},body});
     if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||"код "+r.status)}
     const parts=(await r.json()).parts||{};
-    for(const k in ch){SY.synced[k]=JSON.stringify(ch[k]);SY.at[k]=(parts[k]||{}).at||Date.now()}
+    for(const k in ch){SY.synced[k]=canon(ch[k]);SY.at[k]=(parts[k]||{}).at||Date.now()}
     syncErr="";saveSY();noteBy(parts);
   }catch(e){syncErr=`не удалось сохранить (${e.message})`}
   renderSync();
@@ -983,13 +983,13 @@ async function pull(){
     const loc=partsOf(),next={v:5,tab:S.tab,shareDates:S.shareDates,dates:S.dates,meta:S.meta,r:{...S.r}};let changed=false;
     for(const k in parts){const p=parts[k];if(!(p.at>(SY.at[k]||0)))continue;
       /* у нас есть неотправленные правки этой части — оставляем их, они уйдут следующей отправкой */
-      if(SY.synced[k]!=null&&JSON.stringify(loc[k])!==SY.synced[k])continue;
+      if(SY.synced[k]!=null&&canon(loc[k])!==SY.synced[k])continue;
       /* на сервере нетронутые значения по умолчанию (кто-то открыл сайт впервые), а у нас настоящий расчёт — оставляем свой */
       if(SY.synced[k]==null&&canon(p.v)===canon(DEFP[k])&&canon(loc[k])!==canon(DEFP[k]))continue;
       if(k==="dates"){next.shareDates=p.v.shareDates!==false;next.dates=p.v.dates}
       else if(k==="meta")next.meta=p.v;
       else if(RES[k.slice(2)])next.r[k.slice(2)]=p.v;
-      SY.synced[k]=JSON.stringify(p.v);SY.at[k]=p.at;changed=true}
+      SY.synced[k]=canon(p.v);SY.at[k]=p.at;changed=true}
     syncErr="";saveSY();noteBy(parts);
     if(changed){S=migrate(next);try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
       /* не перерисовываем поле, в котором человек сейчас печатает */
