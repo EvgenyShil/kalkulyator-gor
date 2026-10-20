@@ -207,7 +207,7 @@ button.primary:disabled{opacity:.6;cursor:progress}
       <label for="meName">Ваше имя
         <input id="meName" type="text" maxlength="20">
       </label>
-      <label for="otherName">Друг / остальные
+      <label for="otherName">Попутчик / остальные
         <input id="otherName" type="text" maxlength="20">
       </label>
       <label for="people">Сколько едет всего
@@ -407,7 +407,7 @@ button.primary:disabled{opacity:.6;cursor:progress}
   <h2><span class="mark k"></span>Сохранённые расчёты</h2>
   <form id="saveForm" class="saveform">
     <label for="saveName" class="sr">Название расчёта</label>
-    <input id="saveName" type="text" maxlength="60" placeholder="Например: расчёт Жени">
+    <input id="saveName" type="text" maxlength="60" placeholder="Например: расчёт Альфонса">
     <button type="submit" class="primary">Сохранить</button>
   </form>
   <p class="hint">Сохраняется весь расчёт целиком: все четыре курорта, даты и настройки. «Открыть» подставляет сохранение в общий расчёт, «Обновить» записывает в него текущий расчёт. Сохранения видит и может удалить любой, кто открывает этот сайт.</p>
@@ -521,11 +521,12 @@ const KEY="gory-state-v5", PKEY="gory-prices-v2";
 const clone=o=>JSON.parse(JSON.stringify(o));
 function fresh(){
   const r={};IDS.forEach(id=>{r[id]={...clone(RES[id].def),fareFor:"",bagIn:true,dates:clone(DEF_DATES)}});
-  return {v:5,tab:"sheregesh",shareDates:true,dates:clone(DEF_DATES),meta:{me:"Женя",other:"Друг"},r};
+  return {v:5,tab:"sheregesh",shareDates:true,dates:clone(DEF_DATES),meta:{me:"Альфонс",other:"Содержанка"},r};
 }
 /* Старый формат (только Шерегеш, v4) → новый */
 function migrate(s){
   if(s&&s.v===5){const f=fresh();f.tab=s.tab||f.tab;f.shareDates=s.shareDates!==false;f.dates={...f.dates,...s.dates};f.meta={...f.meta,...(s.meta||{})};
+    if(f.meta.me==="Женя"&&f.meta.other==="Друг")f.meta={me:"Альфонс",other:"Содержанка"}; /* прежние имена по умолчанию */
     IDS.forEach(id=>{const sr=s.r&&s.r[id];if(!sr)return;
       f.r[id]={...f.r[id],...sr,dates:{...f.r[id].dates,...(sr.dates||{})}};
       /* раньше доплата за багаж была отдельным полем — теперь она внутри цены билета */
@@ -607,7 +608,7 @@ document.addEventListener("pointerleave",()=>tip.hidden=true);
 /* Расчёт курорта: всё в рублях на меня (на меня и жену, если едем вдвоём) */
 /* Статьи для «Кто платит» */
 const PAYCATS=[["ticket","Билеты"],["xs","Места с доп. пространством"],["hotel","Отель"],["transfer","Трансфер"],["pass","Ски-пасс"],["guide","Гид"],["rent","Аренда"],["taxi","Такси"],["food","Еда"],["alco","Алкоголь"],["ins","Страховка"],["extra","Прочее"]];
-const nm=k=>esc((S.meta&&S.meta[k])||(k==="me"?"Я":"Друг"));
+const nm=k=>esc((S.meta&&S.meta[k])||(k==="me"?"Я":"Содержанка"));
 /* Ски-пасс: тарифы курорта по периодам, многодневные выгоднее — берём самую дешёвую комбинацию */
 const PERN={low:"низкий сезон",high:"высокий сезон",peak:"пиковый сезон"};
 function periodOf(id,d){const ps=RES[id].periods||[];for(const [a,b,n] of ps)if(d>=sd(a)&&d<=sd(b))return n;return "low"}
@@ -793,7 +794,7 @@ function renderPayers(id,c){
   $("debt").innerHTML=dt?dt+`<small>${c.debts.map(([k,a])=>`${PAYCATS.find(x=>x[0]===k)[1]}: ${a>0?`${ot} → ${me}`:`${me} → ${ot}`} ${fmt(Math.abs(a))}`).join(" · ")}</small>`:(c.others?"Каждый платит сам за себя — долгов нет.":"Едете одни — делить нечего.");
   $("debtAside").hidden=!dt;$("debtAside").innerHTML=dt;
   $("otherLine").hidden=!c.others;
-  $("otherLine").textContent=c.others?`${S.meta.other||"Друг"}: ≈ ${fmt(c.otherPP)} на человека${S.r[id].wife||S.r[id].room==="one"?", если у него свой номер той же цены":""}`:"";
+  $("otherLine").textContent=c.others?`${S.meta.other||"Содержанка"}: ≈ ${fmt(c.otherPP)} на человека${S.r[id].wife||S.r[id].room==="one"?", если у него свой номер той же цены":""}`:"";
 }
 $("payers").addEventListener("change",e=>{
   const sel=e.target.closest("select[data-c]");if(!sel||S.tab==="compare")return;
@@ -961,7 +962,7 @@ function schedulePush(){if(!syncReady)return;clearTimeout(pushT);pushT=setTimeou
 async function push(beacon){
   clearTimeout(pushT);pushT=null;
   const ch=changedParts();if(!Object.keys(ch).length){renderSync();return}
-  const body=JSON.stringify({parts:ch,by:WHO||S.meta.me||""});
+  const body=JSON.stringify({parts:ch,by:([S.meta.me,S.meta.other].includes(WHO)?WHO:S.meta.me)||""});
   if(beacon){try{navigator.sendBeacon("/api/live",new Blob([body],{type:"application/json"}))}catch(e){}return}
   try{
     const r=await fetch("/api/live",{method:"POST",headers:{"content-type":"application/json"},body});
@@ -1005,7 +1006,7 @@ function noteBy(parts){
 function renderSync(){
   const st=!syncReady?(syncErr?`⚠ ${syncErr}`:"загружаю…"):syncErr?`⚠ ${syncErr}`:pushT?"сохраняю…":"всё сохранено";
   const t=x=>new Date(x).toLocaleString("ru-RU",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
-  const names=[S.meta.me,S.meta.other].filter(Boolean),who=WHO||S.meta.me;
+  const names=[S.meta.me,S.meta.other].filter(Boolean),who=names.includes(WHO)?WHO:S.meta.me;
   $("sync").innerHTML=`Общий расчёт для всех, кто открывает сайт · ${esc(st)}${lastBy?` · последнее изменение: ${esc(lastBy.by)}, ${t(lastBy.at)} (${esc(PARTN(lastBy.k))})`:""} · <button type="button" id="syncNow">обновить</button> · вы: <select id="who" aria-label="Кто вы">${names.map(n=>`<option${n===who?" selected":""}>${esc(n)}</option>`).join("")}</select>`;
 }
 $("sync").addEventListener("click",e=>{if(e.target.id==="syncNow")pull()});
