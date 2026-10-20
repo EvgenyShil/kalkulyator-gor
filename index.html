@@ -1,0 +1,503 @@
+<title>Калькулятор Шерегеша</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Manrope:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: controls grouped by trip stage on the left, live ledger pinned on the right; stacks on phones */
+:root{
+  --bg:#eef2f5; --panel:#ffffff; --fg:#14212b; --muted:#5d6e7b; --line:#d6dee5;
+  --accent:#1d5fa8; --accent-soft:#e2ecf7; --warn:#c2571a; --warn-soft:#fbeee4;
+  --green:#2e8b4e; --blue:#1d5fa8; --red:#c23a2b; --black:#14212b;
+  --display:"Unbounded","Manrope",system-ui,sans-serif;
+  --body:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f171e; --panel:#17222c; --fg:#e6edf2; --muted:#93a4b1; --line:#2a3946;
+  --accent:#6aa8ea; --accent-soft:#1c2f42; --warn:#f0904f; --warn-soft:#3a2516;
+  --green:#5cc07e; --blue:#6aa8ea; --red:#ef6b5c; --black:#e6edf2; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f171e; --panel:#17222c; --fg:#e6edf2; --muted:#93a4b1; --line:#2a3946;
+  --accent:#6aa8ea; --accent-soft:#1c2f42; --warn:#f0904f; --warn-soft:#3a2516;
+  --green:#5cc07e; --blue:#6aa8ea; --red:#ef6b5c; --black:#e6edf2; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 48px}
+.wrap{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:24px}
+header h1{font-family:var(--display);font-weight:700;font-size:clamp(26px,4vw,38px);margin:0;letter-spacing:-.01em;text-wrap:balance}
+header p{margin:6px 0 0;color:var(--muted)}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:24px;align-items:start}
+@media (max-width:860px){.grid{grid-template-columns:minmax(0,1fr)}}
+.controls{display:flex;flex-direction:column;gap:16px;min-width:0}
+section.box{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px 18px 16px;display:flex;flex-direction:column;gap:14px;min-width:0}
+section.box h2{margin:0;font-family:var(--display);font-weight:500;font-size:15px;display:flex;align-items:center;gap:10px}
+.mark{width:12px;height:12px;border-radius:50%;flex:none}
+.mark.g{background:var(--green)} .mark.b{background:var(--blue)} .mark.r{background:var(--red)} .mark.k{background:var(--black);border-radius:2px;transform:rotate(45deg);width:10px;height:10px}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+label{display:flex;flex-direction:column;gap:5px;font-size:12.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+input[type=number],input[type=date],select{font:inherit;font-size:15px;text-transform:none;letter-spacing:0;color:var(--fg);background:var(--bg);
+  border:1px solid var(--line);border-radius:7px;padding:9px 10px;width:100%;font-variant-numeric:tabular-nums;min-width:0}
+input:focus-visible,select:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.check{flex-direction:row;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-weight:500;font-size:14px;color:var(--fg)}
+.check input{width:18px;height:18px;accent-color:var(--accent);flex:none}
+.hint{font-size:13px;color:var(--muted);margin:0}
+.seg{display:flex;flex-wrap:wrap;gap:8px}
+.seg button{font:inherit;font-size:14px;font-weight:600;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:20px;padding:7px 14px;cursor:pointer}
+.seg button.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+aside{position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:16px;min-width:0}
+@media (max-width:860px){aside{position:static}}
+.total{display:flex;flex-direction:column;gap:2px}
+.total .lbl{font-size:12.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.total .big{font-family:var(--display);font-weight:700;font-size:34px;font-variant-numeric:tabular-nums;line-height:1.15}
+.total .sub{color:var(--muted);font-variant-numeric:tabular-nums}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:14px}
+th{font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600;text-align:right;padding:0 0 6px;border-bottom:1px solid var(--line)}
+th:first-child{text-align:left}
+td{padding:8px 0;border-bottom:1px solid var(--line);text-align:right;vertical-align:top;white-space:nowrap}
+td:first-child{text-align:left;padding-right:8px;white-space:normal}
+td small{display:block;color:var(--muted);font-size:12px}
+tr.zero td{color:var(--muted)}
+.note{font-size:13px;color:var(--warn);margin:0}
+.days{display:flex;gap:4px;flex-wrap:wrap}
+.day{flex:1 1 0;min-width:34px;text-align:center;font-size:11px;border-radius:5px;padding:6px 0;background:var(--bg);color:var(--muted);border:1px solid var(--line)}
+.day.lift{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+.day.fr{background:var(--red);color:#fff;border-color:var(--red)}
+.day.half{background:linear-gradient(135deg,var(--red) 50%,var(--accent-soft) 50%);color:var(--fg);border-color:var(--red)}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.legend span{display:flex;align-items:center;gap:5px}
+.legend i{width:10px;height:10px;border-radius:2px;display:inline-block}
+button.link{font:inherit;font-size:13px;background:none;border:none;color:var(--accent);cursor:pointer;padding:0;align-self:flex-start;text-decoration:underline}
+button.primary{font:inherit;font-weight:700;font-size:14px;background:var(--accent);color:var(--panel);border:none;border-radius:8px;padding:10px 16px;cursor:pointer;align-self:flex-start}
+button.primary:disabled{opacity:.6;cursor:progress}
+.badge{display:inline-block;font-size:12px;font-weight:700;color:var(--warn);background:var(--warn-soft);border-radius:5px;padding:2px 8px;text-transform:none;letter-spacing:0}
+.fares{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.fare{display:flex;flex-direction:column;gap:2px;text-decoration:none;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-variant-numeric:tabular-nums}
+.fare:hover{border-color:var(--accent)}
+.fare b{font-size:16px}
+.fare span{font-size:13px;color:var(--muted)}
+.fare.cur{border-color:var(--accent);background:var(--accent-soft)}
+.fare.best b{color:var(--green)}
+.status{font-size:13px;color:var(--muted);margin:0}
+.status.err{color:var(--warn)}
+.status a{color:var(--accent)}
+.seg .primary{align-self:center}
+.extlink{align-self:center;color:var(--accent);font-weight:600;font-size:14px;text-decoration:none;padding:8px 4px}
+.extlink:hover{text-decoration:underline}
+.pgroup{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+.pgroup h3{margin:6px 0 0;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+.ptable{max-height:340px;overflow:auto;border:1px solid var(--line);border-radius:8px}
+.ptable table{font-size:13.5px}
+.ptable th,.ptable td{padding:7px 10px}
+.ptable th{position:sticky;top:0;background:var(--panel);padding-top:8px}
+.ptable td:first-child,.ptable th:first-child{text-align:left}
+.ptable td.na{color:var(--muted)}
+.pick{font:inherit;display:flex;flex-direction:column;align-items:flex-end;gap:0;margin-left:auto;background:none;border:1px solid transparent;border-radius:6px;padding:3px 6px;cursor:pointer;color:var(--fg);font-variant-numeric:tabular-nums}
+.pick:hover{border-color:var(--accent)}
+.pick b{font-size:14px}
+.pick small{font-size:11.5px;color:var(--muted);display:block}
+.pick.on{background:var(--accent);border-color:var(--accent);color:var(--panel)}
+.pick.on small{color:var(--panel)}
+.ptable tr.mine td{background:var(--accent-soft)}
+.savebox{display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--line);padding-top:14px}
+.savebox .lbl{font-size:12.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.saveform{display:flex;gap:8px}
+.saveform input{flex:1;min-width:0;font:inherit;font-size:14px;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:8px 10px}
+.saveform .primary{padding:8px 14px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.saved{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.saved li{display:flex;align-items:center;gap:8px;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+.saved .info{flex:1;min-width:0;display:flex;flex-direction:column}
+.saved .info b{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.saved .info span{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.saved button{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:6px;padding:5px 9px;cursor:pointer}
+.saved button.del{color:var(--warn)}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+<header>
+  <h1>Калькулятор Шерегеша</h1>
+  <p id="sub">Поездка 1–8 декабря. Меняйте любые поля, итог пересчитывается сразу.</p>
+  <input id="trip" type="hidden" value="2026-12-01|2026-12-08">
+</header>
+
+<div class="grid">
+<div class="controls">
+
+  <section class="box">
+    <h2><span class="mark g"></span>Состав</h2>
+    <div class="row">
+      <label for="people">Сколько едет
+        <select id="people"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select>
+      </label>
+      <label for="nights">Ночей в отеле
+        <input id="nights" type="number" min="1" max="30" value="7">
+      </label>
+    </div>
+  </section>
+
+  <section class="box">
+    <h2><span class="mark b"></span>Цены Aviasales</h2>
+    <p class="hint">Прямые рейсы Аэрофлота и S7, все варианты на 7–10 дней: с 20 ноября по 31 декабря и февраль. Туда-обратно на 1 человека. Крупно цена с багажом по вашим настройкам, мелко — тариф без багажа. Нажмите на цену, чтобы подставить её в расчёт.</p>
+    <div class="seg">
+      <button type="button" class="primary" id="load">Проверить цены</button>
+      <a class="extlink" id="avsLink" href="https://www.aviasales.ru/search/MOW0112NOZ08121" target="_blank" rel="noopener">Открыть Aviasales ↗</a>
+    </div>
+    <p class="status" id="status" hidden></p>
+    <div id="fares"></div>
+  </section>
+
+  <section class="box">
+    <h2><span class="mark b"></span>Перелёт Москва ⇄ Новокузнецк</h2>
+    <div class="seg" id="airline" role="group" aria-label="Авиакомпания">
+      <button type="button" data-v="su" class="on">Аэрофлот</button>
+      <button type="button" data-v="s7">S7</button>
+      <button type="button" data-v="own">Своя цена</button>
+    </div>
+    <div class="row">
+      <label for="base">Тариф без багажа, туда-обратно, ₽ / чел.
+        <input id="base" type="number" min="0" step="100" value="27317">
+      </label>
+      <label for="bag">Багаж и лыжи / сноуборд
+        <select id="bag"></select>
+      </label>
+      <label for="bagPrice">Доплата за багаж, туда-обратно, ₽
+        <input id="bagPrice" type="number" min="0" step="50" value="7650">
+      </label>
+    </div>
+    <div class="row">
+      <label for="xs">Место с доп. пространством для ног
+        <select id="xs"><option value="0" selected>не берём</option><option value="1">в одну сторону</option><option value="2">туда и обратно</option></select>
+      </label>
+      <label for="xsPrice">Цена места, ₽ за перелёт
+        <input id="xsPrice" type="number" min="0" step="50" value="3320">
+      </label>
+    </div>
+    <p class="hint" id="bagHint"></p>
+  </section>
+
+  <section class="box">
+    <h2><span class="mark g"></span>Жильё и трансфер</h2>
+    <div class="row">
+      <label for="hotel">Отель за весь срок, ₽
+        <input id="hotel" type="number" min="0" step="500" value="38500">
+      </label>
+      <label for="hotelSplit">Делим отель на
+        <select id="hotelSplit"><option value="all" selected>всех едущих</option><option value="1">1 (платит один)</option></select>
+      </label>
+    </div>
+    <div class="row">
+      <label for="transfer">Трансфер в одну сторону, ₽ / чел.
+        <input id="transfer" type="number" min="0" step="100" value="2800">
+      </label>
+      <label for="transferWays">Трансферов
+        <select id="transferWays"><option value="0">нет</option><option value="1">в одну сторону</option><option value="2" selected>туда и обратно</option></select>
+      </label>
+    </div>
+    <p class="hint">Апартаменты, Весенняя 36В: 7 ночей на двоих за 38 500 ₽. Трансфер аэропорт Новокузнецка ⇄ Шерегеш.</p>
+  </section>
+
+  <section class="box">
+    <h2><span class="mark r"></span>Катание</h2>
+    <div class="row">
+      <label for="skiDays">Дней катания всего
+        <input id="skiDays" type="number" min="0" max="20" value="6">
+      </label>
+      <label for="pass">Ски-пасс, ₽ / день
+        <input id="pass" type="number" min="0" step="100" value="3100">
+      </label>
+    </div>
+    <div class="row">
+      <label for="frDays">Фрирайд на ратраках, дней
+        <input id="frDays" type="number" min="0" max="20" value="2">
+      </label>
+      <label for="frType">Формат
+        <select id="frType"><option value="full" selected>полный день · 12 000</option><option value="half">полдня · 6 000</option></select>
+      </label>
+      <label for="frPrice">Цена дня, ₽ / чел.
+        <input id="frPrice" type="number" min="0" step="500" value="12000">
+      </label>
+    </div>
+    <label class="check" for="promo"><input id="promo" type="checkbox" checked>Акция «4-й день бесплатно» (каждый 4-й день фрирайда)</label>
+    <label class="check" for="halfPass"><input id="halfPass" type="checkbox" checked>В дни полудневного фрирайда тоже покупаем ски-пасс</label>
+    <div class="days" id="days" aria-label="Раскладка дней катания"></div>
+    <div class="legend"><span><i style="background:var(--accent-soft);border:1px solid var(--accent)"></i>подъёмники</span><span><i style="background:var(--red)"></i>фрирайд</span><span><i style="background:linear-gradient(135deg,var(--red) 50%,var(--accent-soft) 50%)"></i>полдня фрирайда + подъёмники</span></div>
+    <p class="note" id="daysNote" hidden></p>
+  </section>
+
+  <section class="box">
+    <h2><span class="mark k"></span>Такси, еда, прочее</h2>
+    <div class="row">
+      <label for="taxi">Такси, ₽ за поездку
+        <input id="taxi" type="number" min="0" step="50" value="300">
+      </label>
+      <label for="taxiRides">Поездок в день
+        <input id="taxiRides" type="number" min="0" max="10" value="2">
+      </label>
+      <label for="taxiMode">Цена такси
+        <select id="taxiMode"><option value="car" selected>за машину, делим</option><option value="person">с каждого</option></select>
+      </label>
+    </div>
+    <div class="row">
+      <label for="food">Еда, ₽ / день / чел.
+        <input id="food" type="number" min="0" step="500" value="3000">
+      </label>
+      <label for="foodDays">Дней с едой
+        <input id="foodDays" type="number" min="0" max="30" value="7">
+      </label>
+      <label for="extra">Прочее, ₽ / чел.
+        <input id="extra" type="number" min="0" step="500" value="0">
+      </label>
+    </div>
+  </section>
+
+  <button type="button" class="link" id="reset">Вернуть исходные значения</button>
+</div>
+
+<aside aria-live="polite">
+  <div class="total">
+    <span class="lbl">На одного</span>
+    <span class="big" id="perPerson">—</span>
+    <span class="sub" id="tripLine">—</span>
+  </div>
+  <div style="overflow-x:auto">
+  <table>
+    <thead><tr><th>Статья</th><th>На 1 чел.</th></tr></thead>
+    <tbody id="ledger"></tbody>
+  </table>
+  </div>
+  <p class="hint">В день прилёта (16:25) и в день вылета (08:05) не катаемся, поэтому по умолчанию 6 дней катания.</p>
+  <div class="savebox">
+    <span class="lbl">Сохранённые расчёты</span>
+    <form id="saveForm" class="saveform">
+      <label for="saveName" class="sr">Название расчёта</label>
+      <input id="saveName" type="text" maxlength="60" placeholder="Например: Аэрофлот, 2 дня фрирайда">
+      <button type="submit" class="primary">Сохранить</button>
+    </form>
+    <ul id="savedList" class="saved"></ul>
+    <p class="hint" id="savedEmpty">Загружаю сохранённые расчёты…</p>
+    <p class="hint">Сохранения общие: их видит и может удалить любой, кто открывает этот сайт.</p>
+  </div>
+</aside>
+</div>
+</div>
+
+
+<script>
+const $=id=>document.getElementById(id);
+
+/* Тарифы авиакомпаний. Доплаты туда-обратно на 1 человека. */
+const AIR={
+  su:{name:"Аэрофлот",base:27317,xs:3320,bags:[
+    {v:"none",t:"без багажа",p:0},
+    {v:"fare",t:"Эконом Оптимум: багаж 23 кг (лыжи / сноуборд входят)",p:7650},
+  ],def:"fare",hint:"Аэрофлот: 1 место багажа до 23 кг, горнолыжное снаряжение идёт как это место."},
+  s7:{name:"S7",base:24554,xs:3300,bags:[
+    {v:"none",t:"без багажа",p:0},
+    {v:"fare",t:"Тариф Стандарт: багаж 23 кг, возврат, выбор места",p:11360},
+    {v:"sport",t:"Базовый + лыжи / сноуборд отдельно, 2 × 4 550",p:9100},
+  ],def:"fare",hint:"S7: Стандарт дороже инвентаря отдельно на 2 260 ₽, но даёт возврат (сбор 3 500), обмен дешевле (2 500 вместо 4 500) и выбор места на регистрации."},
+  own:{name:"Своя цена",base:34967,xs:3300,bags:[
+    {v:"none",t:"без доплат",p:0},
+    {v:"own",t:"своя доплата",p:0},
+  ],def:"none",hint:"Введите итоговую цену билета и при необходимости доплату."},
+};
+
+const ids=["trip","people","nights","airline","base","bag","bagPrice","xs","xsPrice","hotel","hotelSplit","transfer","transferWays","skiDays","pass","frDays","frType","frPrice","promo","halfPass","taxi","taxiRides","taxiMode","food","foodDays","extra"];
+const KEY="sheregesh-budget-v4", SAVED="sheregesh-saved-v1";
+const fmt=n=>Math.round(n).toLocaleString("ru-RU")+" ₽";
+const num=i=>Math.max(0,parseFloat($(i).value)||0);
+const plural=(n,a,b,c)=>{n=Math.abs(n)%100;const m=n%10;if(n>10&&n<20)return c;if(m>1&&m<5)return b;if(m===1)return a;return c};
+const parseD=s=>{const [y,m,d]=(s||"").split("-").map(Number);return y?new Date(y,m-1,d):null};
+const short=d=>`${String(d.getDate()).padStart(2,"0")}.${String(d.getMonth()+1).padStart(2,"0")}`;
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+let airline="su";
+let lastTotals={pp:0};
+let lastPrices=null;
+const MON=["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
+const tripDates=()=>{const [a,b]=($("trip").value||"").split("|");return [parseD(a),parseD(b)]};
+
+function fillBag(code,keepValue){
+  const a=AIR[code],sel=$("bag"),prev=sel.value;
+  sel.innerHTML=a.bags.map(b=>`<option value="${b.v}">${b.t}</option>`).join("");
+  sel.value=keepValue&&a.bags.some(b=>b.v===prev)?prev:a.def;
+  $("bagHint").textContent=a.hint;
+}
+function setAirline(code,fromUser){
+  airline=AIR[code]?code:"su";
+  document.querySelectorAll("#airline button").forEach(b=>b.classList.toggle("on",b.dataset.v===airline));
+  fillBag(airline,!fromUser);
+  if(fromUser){
+    const a=AIR[airline];$("base").value=a.base;$("xsPrice").value=a.xs;
+    const b=a.bags.find(x=>x.v===$("bag").value);$("bagPrice").value=b?b.p:0;
+  }
+}
+
+function snapshot(){const s={};ids.forEach(i=>{if(i==="airline"){s[i]=airline;return}const el=$(i);s[i]=el.type==="checkbox"?el.checked:el.value});return s}
+function apply(s){setAirline(s.airline||"su",false);ids.forEach(i=>{if(!(i in s)||i==="airline")return;const el=$(i);if(el.type==="checkbox")el.checked=s[i];else el.value=s[i]});$("bagHint").textContent=AIR[airline].hint}
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY)||"null");if(s)apply(s)}catch(e){}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(snapshot()))}catch(e){}}
+
+function calc(){
+  const P=parseInt($("people").value,10)||1;
+  const nights=Math.round(num("nights"));
+  const ski=Math.round(num("skiDays"));
+  let fr=Math.round(num("frDays"));
+  const note=$("daysNote");
+  if(fr>ski){note.hidden=false;note.textContent=`Фрирайда ${fr} ${plural(fr,"день","дня","дней")}, а катания всего ${ski}. Считаю ${ski}.`;fr=ski}else note.hidden=true;
+  const half=$("frType").value==="half";
+  const frPaid=$("promo").checked?fr-Math.floor(fr/4):fr;
+  const frCost=frPaid*num("frPrice");
+  const liftDays=half?(ski-fr)+($("halfPass").checked?fr:0):(ski-fr);
+  const passCost=liftDays*num("pass");
+  const hotelPP=num("hotel")/($("hotelSplit").value==="all"?P:1);
+  const transferPP=num("transfer")*parseInt($("transferWays").value,10);
+  const taxiTotal=ski*num("taxiRides")*num("taxi");
+  const taxiPP=$("taxiMode").value==="car"?taxiTotal/P:taxiTotal;
+  const foodPP=num("food")*num("foodDays");
+  const extra=num("extra");
+  const bagOn=$("bag").value!=="none";
+  const bagPP=bagOn?num("bagPrice"):0;
+  const xsN=parseInt($("xs").value,10);
+  const xsPP=xsN*num("xsPrice");
+  const bagLabel=$("bag").selectedOptions[0]?.textContent||"";
+  const free=fr-frPaid;
+  const rows=[
+    {n:`Билет, ${AIR[airline].name}`,d:"туда-обратно, без багажа",v:num("base")},
+    {n:"Багаж и инвентарь",d:bagOn?bagLabel:"не берём",v:bagPP},
+    {n:"Место с доп. пространством",d:xsN?`${xsN} × ${fmt(num("xsPrice"))}`:"",v:xsPP,hideZero:true},
+    {n:"Отель",d:`${nights} ${plural(nights,"ночь","ночи","ночей")}${$("hotelSplit").value==="all"&&P>1?`, ÷ ${P}`:""}`,v:hotelPP,g:num("hotel")},
+    {n:"Трансфер аэропорт ⇄ Шерегеш",d:transferPP?`${$("transferWays").value} × ${fmt(num("transfer"))}`:"",v:transferPP},
+    {n:"Ски-пасс",d:`${liftDays} ${plural(liftDays,"день","дня","дней")} × ${fmt(num("pass"))}`,v:passCost},
+    {n:"Фрирайд",d:fr?`${fr} ${plural(fr,"день","дня","дней")}${half?" по полдня":""}${free?`, ${free} бесплатно`:""}`:"",v:frCost},
+    {n:"Такси до горы",d:`${ski} дн. × ${num("taxiRides")} × ${fmt(num("taxi"))}${$("taxiMode").value==="car"&&P>1?`, ÷ ${P}`:""}`,v:taxiPP},
+    {n:"Еда",d:`${num("foodDays")} дн. × ${fmt(num("food"))}`,v:foodPP},
+  ];
+  if(extra) rows.push({n:"Прочее",d:"",v:extra});
+  const shown=rows.filter(r=>!(r.hideZero&&!r.v));
+  const pp=shown.reduce((s,r)=>s+r.v,0);
+  lastTotals={pp};
+
+  const [ta,tb]=tripDates();
+  const tripTxt=ta&&tb?`${ta.getDate()}${ta.getMonth()===tb.getMonth()?"":" "+MON[ta.getMonth()]}–${tb.getDate()} ${MON[tb.getMonth()]}`:"";
+  $("sub").textContent=`${tripTxt?`Поездка ${tripTxt}, ${nights} ${plural(nights,"ночь","ночи","ночей")}. `:""}Меняйте любые поля, итог пересчитывается сразу.`;
+  $("tripLine").textContent=`${AIR[airline].name}${tripTxt?`, ${tripTxt}`:""}`;
+  $("perPerson").textContent=fmt(pp);
+  const dm=d=>`${String(d.getDate()).padStart(2,"0")}${String(d.getMonth()+1).padStart(2,"0")}`;
+  if(ta&&tb){$("avsLink").href=`https://www.aviasales.ru/search/MOW${dm(ta)}NOZ${dm(tb)}${P}`;$("avsLink").textContent=`Открыть Aviasales на ${short(ta)} – ${short(tb)} ↗`}
+  $("ledger").innerHTML=shown.map(r=>`<tr class="${r.v?"":"zero"}"><td>${r.n}${r.d?`<small>${r.d}</small>`:""}</td><td>${fmt(r.v)}</td></tr>`).join("");
+
+  let html="";
+  for(let i=0;i<ski;i++){const cls=i<fr?(half?"half":"fr"):"lift";
+    const lbl=ta?short(new Date(ta.getFullYear(),ta.getMonth(),ta.getDate()+1+i)):`день ${i+1}`;
+    html+=`<div class="day ${cls}">${lbl}</div>`}
+  $("days").innerHTML=html||'<span class="hint">Дней катания нет</span>';
+}
+
+/* Цены Aviasales: /api/prices на Vercel отдаёт прямые рейсы SU и S7 по всем вариантам */
+const GROUPS=[{id:"dec",t:"Конец ноября – декабрь"},{id:"feb",t:"Февраль"}];
+const bagFee=code=>{if(airline===code)return $("bag").value==="none"?0:num("bagPrice");const a=AIR[code];return (a.bags.find(b=>b.v===a.def)||{p:0}).p};
+const withBag=(p,code)=>p[code]==null?null:p[code]+bagFee(code);
+const bestOf=p=>{const c=["su","s7"].filter(k=>p[k]!=null);if(!c.length)return null;return c.reduce((x,y)=>withBag(p,x)<=withBag(p,y)?x:y)};
+
+function applyFare(p,code){
+  setAirline(code,true);
+  $("base").value=p[code];
+  $("trip").value=`${p.depart}|${p.ret}`;
+  $("nights").value=p.days;
+  $("foodDays").value=p.days;
+  $("skiDays").value=Math.max(0,p.days-1);
+  update();renderPrices();
+}
+function renderPrices(){
+  if(!lastPrices)return;
+  const box=$("fares"),cur=$("trip").value;
+  const cell=(p,code)=>{
+    if(p[code]==null)return `<td class="na">—</td>`;
+    const on=cur===`${p.depart}|${p.ret}`&&airline===code;
+    return `<td><button type="button" class="pick${on?" on":""}" data-k="${p.depart}|${p.ret}" data-a="${code}" title="Подставить в расчёт"><b>${fmt(withBag(p,code))}</b><small>без багажа ${fmt(p[code])}</small></button></td>`};
+  box.innerHTML=GROUPS.map(g=>{
+    const list=lastPrices.filter(p=>p.group===g.id&&bestOf(p)).sort((a,b)=>withBag(a,bestOf(a))-withBag(b,bestOf(b)));
+    if(!list.length)return "";
+    const b0=list[0],bc=bestOf(b0);
+    const rowsH=list.map(p=>`<tr class="${cur===`${p.depart}|${p.ret}`?"mine":""}"><td>${short(parseD(p.depart))} – ${short(parseD(p.ret))}</td><td>${p.days}</td>${cell(p,"su")}${cell(p,"s7")}</tr>`).join("");
+    return `<div class="pgroup"><h3>${g.t} · с багажом от ${fmt(withBag(b0,bc))} (${AIR[bc].name})</h3><div class="ptable"><table><thead><tr><th>Даты</th><th>Дней</th><th>Аэрофлот</th><th>S7</th></tr></thead><tbody>${rowsH}</tbody></table></div></div>`;
+  }).join("");
+}
+$("fares").addEventListener("click",e=>{
+  const b=e.target.closest(".pick");if(!b||!lastPrices)return;
+  const p=lastPrices.find(x=>`${x.depart}|${x.ret}`===b.dataset.k);if(p)applyFare(p,b.dataset.a);
+});
+async function loadPrices(){
+  const st=$("status"),btn=$("load");
+  btn.disabled=true;btn.textContent="Загружаю…";st.hidden=false;st.className="status";st.textContent="Запрашиваю цены у Aviasales…";
+  try{
+    const r=await fetch("/api/prices?t="+Date.now(),{cache:"no-store"});
+    if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||("код "+r.status))}
+    const j=await r.json();
+    lastPrices=(j.prices||[]).filter(p=>p.su!=null||p.s7!=null);
+    if(!lastPrices.length){st.className="status err";st.textContent="Aviasales не вернул цен. Попробуйте позже.";$("fares").innerHTML="";return}
+    let best=null,bc=null;
+    for(const p of lastPrices){const c=bestOf(p);if(c&&(!best||withBag(p,c)<withBag(best,bc))){best=p;bc=c}}
+    const t=new Date(j.fetchedAt||Date.now());
+    st.innerHTML=`${lastPrices.length} ${plural(lastPrices.length,"вариант","варианта","вариантов")}, только прямые рейсы. Самый дешёвый с багажом подставлен в расчёт: <b>${AIR[bc].name}, ${short(parseD(best.depart))} – ${short(parseD(best.ret))}, ${best.days} ${plural(best.days,"день","дня","дней")}</b>. Запрос к Aviasales в ${t.toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit",second:"2-digit"})}.`;
+    applyFare(best,bc);
+  }catch(e){
+    st.className="status err";
+    st.textContent=`Не удалось получить цены (${e.message}). Цены подгружаются только на сайте, опубликованном на Vercel.`;
+    $("fares").innerHTML="";
+  }finally{btn.disabled=false;btn.textContent="Проверить цены"}
+}
+
+/* Сохранённые расчёты (в этом браузере) */
+let savedItems=[];
+async function loadSaved(){
+  try{
+    const r=await fetch("/api/saves",{cache:"no-store"});
+    if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||("код "+r.status))}
+    savedItems=(await r.json()).items||[];
+    renderSaved();
+  }catch(e){$("savedList").innerHTML="";$("savedEmpty").hidden=false;$("savedEmpty").textContent=`Не удалось загрузить сохранения (${e.message}). Общие сохранения работают только на сайте на Vercel.`}
+}
+function renderSaved(){
+  $("savedEmpty").hidden=savedItems.length>0;
+  if(!savedItems.length)$("savedEmpty").textContent="Пока ничего не сохранено.";
+  $("savedList").innerHTML=savedItems.map((s,i)=>{
+    const d=new Date(s.at);
+    const meta=[`${fmt(s.pp)} / чел.`,s.airline,s.trip,d.toLocaleDateString("ru-RU",{day:"numeric",month:"short"})].filter(Boolean).join(" · ");
+    return `<li><div class="info"><b title="${esc(s.name)}">${esc(s.name)}</b><span>${esc(meta)}</span></div><button type="button" data-open="${i}">Открыть</button><button type="button" class="del" data-del="${i}" aria-label="Удалить">✕</button></li>`}).join("");
+}
+$("saveForm").addEventListener("submit",async e=>{
+  e.preventDefault();
+  calc();
+  const btn=$("saveForm").querySelector("button");btn.disabled=true;btn.textContent="Сохраняю…";
+  const [ta,tb]=tripDates();
+  const body={name:$("saveName").value.trim()||`${AIR[airline].name}, ${fmt(lastTotals.pp)}`,pp:Math.round(lastTotals.pp),airline:AIR[airline].name,trip:ta&&tb?`${short(ta)}–${short(tb)}`:"",state:snapshot()};
+  try{
+    const r=await fetch("/api/saves",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)});
+    if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||("код "+r.status))}
+    $("saveName").value="";await loadSaved();
+  }catch(err){$("savedEmpty").hidden=false;$("savedEmpty").textContent=`Не удалось сохранить (${err.message}).`}
+  finally{btn.disabled=false;btn.textContent="Сохранить"}
+});
+$("savedList").addEventListener("click",async e=>{
+  const o=e.target.closest("[data-open]"),d=e.target.closest("[data-del]");
+  if(o){const s=savedItems[+o.dataset.open];if(s){apply(s.state);update();window.scrollTo({top:0,behavior:"smooth"})}}
+  if(d){const s=savedItems[+d.dataset.del];if(!s)return;d.disabled=true;
+    try{await fetch("/api/saves?id="+encodeURIComponent(s.id),{method:"DELETE"})}catch(err){}
+    await loadSaved()}
+});
+
+/* События */
+document.querySelectorAll("#airline button").forEach(b=>b.addEventListener("click",()=>{setAirline(b.dataset.v,true);update()}));
+$("bag").addEventListener("change",()=>{const b=AIR[airline].bags.find(x=>x.v===$("bag").value);if(b&&b.v!=="own")$("bagPrice").value=b.p;update()});
+$("frType").addEventListener("change",()=>{$("frPrice").value=$("frType").value==="half"?6000:12000;update()});
+$("load").addEventListener("click",loadPrices);
+function update(){calc();save();renderPrices()}
+ids.forEach(i=>{if(i==="airline")return;$(i).addEventListener("input",update);$(i).addEventListener("change",update)});
+
+setAirline("su",false);
+const defaults=snapshot();
+$("reset").addEventListener("click",()=>{apply(defaults);update()});
+load();update();loadSaved();
+</script>
