@@ -1,17 +1,28 @@
-// Общие сохранённые расчёты в Vercel Blob: их видят все, кто открывает сайт.
+// Общие сохранённые расчёты: их видят все, кто открывает сайт. Все в одном файле data/saves.json.
 // GET    /api/saves          — список
-// POST   /api/saves          — сохранить { name, summary, state } (весь расчёт по всем курортам)
+// POST   /api/saves          — сохранить { name, summary, state }; с { id } — обновить это сохранение
 // DELETE /api/saves?id=...   — удалить
-import { put, list, del } from "@vercel/blob";
+import { list } from "@vercel/blob";
+import { FILES, readJSON, update, readBody } from "./_store.js";
 
-const PREFIX = "saves/";
+const clean = body => ({
+  name: String(body.name || "Без названия").slice(0, 80),
+  summary: Array.isArray(body.summary) ? body.summary.slice(0, 8).map(x => ({
+    r: String(x && x.r || "").slice(0, 30),
+    pp: Math.round(Number(x && x.pp) || 0),
+  })) : [],
+  state: body.state,
+});
 
-async function readAll() {
+/* Раньше каждое сохранение лежало отдельным файлом saves/*.json — один раз собираем их в общий файл */
+async function legacy() {
   const out = [];
   let cursor;
   do {
-    const page = await list({ prefix: PREFIX, cursor, limit: 1000 });
-    out.push(...page.blobs);
+    const page = await list({ prefix: "saves/", cursor, limit: 1000 });
+    for (const b of page.blobs) {
+      try { const r = await fetch(b.url, { cache: "no-store" }); if (r.ok) out.push({ ...(await r.json()), id: b.pathname }); } catch {}
+    }
     cursor = page.hasMore ? page.cursor : undefined;
   } while (cursor);
   return out;
@@ -21,50 +32,36 @@ export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
   try {
     if (req.method === "GET") {
-      const blobs = await readAll();
-      const items = await Promise.all(blobs.map(async b => {
-        try {
-          const r = await fetch(b.url, { cache: "no-store" });
-          if (!r.ok) return null;
-          const item = await r.json();
-          return { ...item, id: b.pathname };
-        } catch { return null; }
-      }));
-      res.status(200).json({ items: items.filter(Boolean).sort((a, b) => (b.at || 0) - (a.at || 0)) });
+      let cur = await readJSON(FILES.saves);
+      let items = cur ? cur.data.items : null;
+      if (!items) { const old = await legacy(); items = (await update(FILES.saves, d => d.items ? d : { items: old }, () => ({}))).items; }
+      res.status(200).json({ items: [...items].sort((a, b) => (b.at || 0) - (a.at || 0)) });
       return;
     }
 
     if (req.method === "POST") {
-      let body = req.body;
-      if (typeof body === "string") { try { body = JSON.parse(body); } catch { body = null; } }
-      if (!body || typeof body !== "object" || typeof body.state !== "object") {
-        res.status(400).json({ error: "Нет данных расчёта" });
-        return;
-      }
-      const item = {
-        name: String(body.name || "Без названия").slice(0, 80),
-        summary: Array.isArray(body.summary) ? body.summary.slice(0, 8).map(x => ({
-          r: String(x && x.r || "").slice(0, 30),
-          pp: Math.round(Number(x && x.pp) || 0),
-        })) : [],
-        state: body.state,
-        at: Date.now(),
-      };
-      const json = JSON.stringify(item);
-      if (json.length > 100000) { res.status(413).json({ error: "Слишком большой расчёт" }); return; }
-      const blob = await put(`${PREFIX}${item.at}.json`, json, {
-        access: "public", contentType: "application/json", addRandomSuffix: true,
-      });
-      res.status(200).json({ item: { ...item, id: blob.pathname } });
+      const body = await readBody(req);
+      if (!body || typeof body.state !== "object") { res.status(400).json({ error: "Нет данных расчёта" }); return; }
+      const c = clean(body);
+      if (JSON.stringify(c).length > 100000) { res.status(413).json({ error: "Слишком большой расчёт" }); return; }
+      const id = body.id ? String(body.id).slice(0, 120) : `s${Date.now()}${Math.random().toString(36).slice(2, 6)}`;
+      let item;
+      await update(FILES.saves, d => {
+        const items = d.items || [];
+        const i = items.findIndex(x => x.id === id);
+        item = { ...(i >= 0 ? items[i] : {}), ...c, id, at: Date.now() };
+        if (body.id && body.keepName && i >= 0) item.name = items[i].name;
+        if (i >= 0) items[i] = item; else items.push(item);
+        return { items };
+      }, () => ({ items: [] }));
+      res.status(200).json({ item });
       return;
     }
 
     if (req.method === "DELETE") {
       const id = String((req.query && req.query.id) || "");
-      if (!id.startsWith(PREFIX) || id.includes("..")) { res.status(400).json({ error: "Неверный id" }); return; }
-      const blobs = await readAll();
-      const b = blobs.find(x => x.pathname === id);
-      if (b) await del(b.url);
+      if (!id) { res.status(400).json({ error: "Нет id" }); return; }
+      await update(FILES.saves, d => ({ items: (d.items || []).filter(x => x.id !== id) }), () => ({ items: [] }));
       res.status(200).json({ ok: true });
       return;
     }
