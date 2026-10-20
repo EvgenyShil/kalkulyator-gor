@@ -953,6 +953,8 @@ const saveSY=()=>{try{localStorage.setItem(SKEY,JSON.stringify(SY))}catch(e){}};
 let WHO="";try{WHO=localStorage.getItem("gory-who")||""}catch(e){}
 let pushT=null,pulling=false,lastPull=0,syncErr="",lastBy=null,syncReady=false;
 const PARTN=k=>k==="dates"?"даты":k==="meta"?"имена":RES[k.slice(2)]?RES[k.slice(2)].name:k;
+const canon=o=>JSON.stringify(o,(k,v)=>v&&typeof v==="object"&&!Array.isArray(v)?Object.keys(v).sort().reduce((a,x)=>(a[x]=v[x],a),{}):v);
+const DEFP=(()=>{const f=fresh(),o={dates:{shareDates:f.shareDates,dates:f.dates},meta:f.meta};IDS.forEach(id=>o["r:"+id]=f.r[id]);return o})();
 function partsOf(){const o={dates:{shareDates:S.shareDates,dates:S.dates},meta:S.meta};IDS.forEach(id=>o["r:"+id]=S.r[id]);return o}
 function changedParts(){const o=partsOf(),out={};for(const k in o){if(SY.synced[k]!==JSON.stringify(o[k]))out[k]=o[k]}return out}
 function schedulePush(){if(!syncReady)return;clearTimeout(pushT);pushT=setTimeout(()=>push(),4000);renderSync()}
@@ -981,6 +983,8 @@ async function pull(){
     for(const k in parts){const p=parts[k];if(!(p.at>(SY.at[k]||0)))continue;
       /* у нас есть неотправленные правки этой части — оставляем их, они уйдут следующей отправкой */
       if(SY.synced[k]!=null&&JSON.stringify(loc[k])!==SY.synced[k])continue;
+      /* на сервере нетронутые значения по умолчанию (кто-то открыл сайт впервые), а у нас настоящий расчёт — оставляем свой */
+      if(SY.synced[k]==null&&canon(p.v)===canon(DEFP[k])&&canon(loc[k])!==canon(DEFP[k]))continue;
       if(k==="dates"){next.shareDates=p.v.shareDates!==false;next.dates=p.v.dates}
       else if(k==="meta")next.meta=p.v;
       else if(RES[k.slice(2)])next.r[k.slice(2)]=p.v;
