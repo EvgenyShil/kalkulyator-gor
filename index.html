@@ -458,7 +458,8 @@ function migrate(s){
   for(const k in map)if(k in s)r[map[k]]=s[k];
   if(s.airline)r.airline={su:"SU",s7:"S7",own:"own"}[s.airline]||"SU";
   if("bag" in s)r.bag=s.bag!=="none";
-  if("hotel" in s)r.hotelNight=Math.round((parseFloat(s.hotel)||0)/n);
+  if("hotel" in s)r.hotelNight=Math.round((parseFloat(s.hotel)||0)/n*100)/100;
+  r.alco=0; /* в старых расчётах алкоголя не было */
   if(s.hotelSplit==="1")r.room="one";
   if(s.trip){f.dates.trip=s.trip;r.fareFor=s.trip}
   return f;
