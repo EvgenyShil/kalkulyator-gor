@@ -2,8 +2,11 @@
 // GET    /api/saves          — список
 // POST   /api/saves          — сохранить { name, summary, state }; с { id } — обновить это сохранение
 // DELETE /api/saves?id=...   — удалить
+// К каждому сохранению в списке прикладываем историю цены билета на его даты по каждому курорту:
+// hist: { sheregesh: { key, points: [[время, цена без багажа], ...] }, ... }
 import { list } from "@vercel/blob";
 import { FILES, readJSON, update, readBody } from "./_store.js";
+import { tripsOf, savedBatch, record } from "./_aviasales.js";
 
 const clean = body => ({
   name: String(body.name || "Без названия").slice(0, 80),
@@ -35,7 +38,14 @@ export default async function handler(req, res) {
       let cur = await readJSON(FILES.saves);
       let items = cur ? cur.data.items : null;
       if (!items) { const old = await legacy(); items = (await update(FILES.saves, d => d.items ? d : { items: old }, () => ({}))).items; }
-      res.status(200).json({ items: [...items].sort((a, b) => (b.at || 0) - (a.at || 0)) });
+      let H = {};
+      try { const h = await readJSON(FILES.history); H = h ? h.data : {}; } catch {}
+      const withHist = items.map(it => {
+        const hist = {};
+        for (const t of tripsOf(it.state)) hist[t.id] = { key: t.key, points: (H[t.dest] || {})[t.key] || [] };
+        return { ...it, hist };
+      });
+      res.status(200).json({ items: withHist.sort((a, b) => (b.at || 0) - (a.at || 0)) });
       return;
     }
 
@@ -54,6 +64,8 @@ export default async function handler(req, res) {
         if (i >= 0) items[i] = item; else items.push(item);
         return { items };
       }, () => ({ items: [] }));
+      /* первая точка графика — сразу при сохранении; ошибка здесь не мешает сохранению */
+      try { const b = await savedBatch([item]); if (Object.keys(b).length) await record(b); } catch {}
       res.status(200).json({ item });
       return;
     }

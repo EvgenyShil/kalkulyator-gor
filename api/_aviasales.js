@@ -38,6 +38,39 @@ export async function prices(dest, from, to, tmin, tmax) {
   return (await Promise.all(jobs)).flat().filter(x => x.ret <= to);
 }
 
+/* Цена на конкретные даты (для сохранённых расчётов) */
+export async function exact(dest, depart, ret) {
+  const t = Math.round((Date.parse(ret) - Date.parse(depart)) / 864e5);
+  if (!(t > 0)) return [];
+  return (await ribbon(dest, depart, depart, t)).filter(p => p.ret === ret);
+}
+
+/* Поездки сохранённого расчёта: по каждому курорту его даты */
+export const RESORT_DEST = { sheregesh: "NOZ", kirovsk: "KVK", sochi: "AER", elbrus: "MRV" };
+export function tripsOf(state) {
+  if (!state || typeof state !== "object") return [];
+  const ok = k => /^\d{4}-\d{2}-\d{2}\|\d{4}-\d{2}-\d{2}$/.test(k || "");
+  if (state.v !== 5) return ok(state.trip) ? [{ id: "sheregesh", dest: "NOZ", key: state.trip }] : [];
+  return Object.entries(RESORT_DEST).map(([id, dest]) => {
+    const r = state.r && state.r[id] || {};
+    const key = (state.shareDates === false ? r.dates : state.dates || {})?.trip;
+    return ok(key) ? { id, dest, key } : null;
+  }).filter(Boolean);
+}
+
+/* Цены на даты всех сохранённых расчётов → { NOZ: [варианты], ... } для record() */
+export async function savedBatch(items) {
+  const seen = new Set(), batch = {};
+  for (const it of items) for (const t of tripsOf(it.state)) {
+    const k = t.dest + t.key;
+    if (seen.has(k)) continue;
+    seen.add(k);
+    const [a, b] = t.key.split("|");
+    try { (batch[t.dest] = batch[t.dest] || []).push(...await exact(t.dest, a, b)); } catch {}
+  }
+  return batch;
+}
+
 /* История: { NOZ: { "2027-02-08|2027-02-15": [[время, цена], ...] }, _lastRun }.
    Точку добавляем, если цена изменилась или прошло больше 20 часов; храним 40 последних.
    batch: { NOZ: [варианты], KVK: [...] } — всё одной записью, чтобы беречь лимит Blob. */

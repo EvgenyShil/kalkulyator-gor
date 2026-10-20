@@ -155,11 +155,14 @@ button.primary:disabled{opacity:.6;cursor:progress}
 .undo button{font:inherit;font-weight:700;background:none;border:none;color:var(--accent);cursor:pointer;text-decoration:underline;margin-left:6px}
 .hist{display:flex;flex-direction:column;gap:4px;margin-top:4px}
 .hist svg{width:100%;height:70px;display:block;overflow:visible}
-.hist svg.dates{height:90px}
-.hist .bar{cursor:pointer;opacity:.85}
-.hist .bar:hover{opacity:1}
-.hist .bar.on{stroke:var(--fg);stroke-width:2;vector-effect:non-scaling-stroke;opacity:1}
-.hist .cap{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.saved li{flex-wrap:wrap}
+.shist{flex-basis:100%;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 10px;align-items:center;border-top:1px solid var(--line);padding-top:8px;margin-top:2px;font-size:13px}
+.shist .sh-n{font-weight:600}
+.shist .sh-g{display:flex;align-items:center;gap:8px;min-width:0;color:var(--muted)}
+.shist .sh-g svg{width:120px;height:26px;flex:none}
+.shist .sh-g small{font-size:11.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.shist .sh-v{font-weight:700;font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+@media (max-width:520px){.shist .sh-g small{display:none}}
 .tr{font-size:11px;font-weight:700;margin-left:4px}
 .tr.dn{color:var(--green)} .tr.up{color:var(--red)}
 [hidden]{display:none!important}
@@ -203,12 +206,6 @@ button.primary:disabled{opacity:.6;cursor:progress}
   <section class="box">
     <h2><span class="mark g"></span>Состав</h2>
     <div class="row">
-      <label for="meName">Ваше имя
-        <input id="meName" type="text" maxlength="20">
-      </label>
-      <label for="otherName">Попутчик / остальные
-        <input id="otherName" type="text" maxlength="20">
-      </label>
       <label for="people">Сколько едет всего
         <select id="people"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option></select>
       </label>
@@ -397,10 +394,10 @@ button.primary:disabled{opacity:.6;cursor:progress}
   <h2><span class="mark k"></span>Сохранённые расчёты</h2>
   <form id="saveForm" class="saveform">
     <label for="saveName" class="sr">Название расчёта</label>
-    <input id="saveName" type="text" maxlength="60" placeholder="Например: расчёт Альфонса">
+    <input id="saveName" type="text" maxlength="60" placeholder="Например: февраль, Роза Хутор">
     <button type="submit" class="primary">Сохранить</button>
   </form>
-  <p class="hint">Сохраняется весь расчёт целиком: все четыре курорта, даты и настройки. «Открыть» подставляет сохранение в общий расчёт, «Обновить» записывает в него текущий расчёт. Сохранения видит и может удалить любой, кто открывает этот сайт.</p>
+  <p class="hint">Сохраняется весь расчёт целиком: все четыре курорта, даты и настройки. «Открыть» подставляет сохранение в общий расчёт, «Обновить» записывает в него текущий расчёт. Под каждым сохранением — как меняется цена билета с багажом на его даты: сайт проверяет её при сохранении и каждое утро. Сохранения видит и может удалить любой, кто открывает этот сайт.</p>
   <p class="undo" id="undo" hidden></p>
   <ul id="savedList" class="saved"></ul>
   <p class="hint" id="savedEmpty">Загружаю сохранённые расчёты…</p>
@@ -511,12 +508,11 @@ const KEY="gory-state-v5", PKEY="gory-prices-v2";
 const clone=o=>JSON.parse(JSON.stringify(o));
 function fresh(){
   const r={};IDS.forEach(id=>{r[id]={...clone(RES[id].def),fareFor:"",bagIn:true,dates:clone(DEF_DATES)}});
-  return {v:5,tab:"sheregesh",shareDates:true,dates:clone(DEF_DATES),meta:{me:"Альфонс",other:"Содержанка"},r};
+  return {v:5,tab:"sheregesh",shareDates:true,dates:clone(DEF_DATES),r};
 }
 /* Старый формат (только Шерегеш, v4) → новый */
 function migrate(s){
-  if(s&&s.v===5){const f=fresh();f.tab=s.tab||f.tab;f.shareDates=s.shareDates!==false;f.dates={...f.dates,...s.dates};f.meta={...f.meta,...(s.meta||{})};
-    if(f.meta.me==="Женя"&&f.meta.other==="Друг")f.meta={me:"Альфонс",other:"Содержанка"}; /* прежние имена по умолчанию */
+  if(s&&s.v===5){const f=fresh();f.tab=s.tab||f.tab;f.shareDates=s.shareDates!==false;f.dates={...f.dates,...s.dates};
     IDS.forEach(id=>{const sr=s.r&&s.r[id];if(!sr)return;
       f.r[id]={...f.r[id],...sr,dates:{...f.r[id].dates,...(sr.dates||{})}};
       /* раньше доплата за багаж была отдельным полем — теперь она внутри цены билета */
@@ -596,7 +592,6 @@ document.addEventListener("pointermove",e=>{
 document.addEventListener("pointerleave",()=>tip.hidden=true);
 
 /* Расчёт курорта: всё в рублях на меня (на меня и жену, если едем вдвоём) */
-const nm=k=>esc((S.meta&&S.meta[k])||(k==="me"?"Я":"Содержанка"));
 /* Ски-пасс: тарифы курорта по периодам, многодневные выгоднее — берём самую дешёвую комбинацию */
 const PERN={low:"низкий сезон",high:"высокий сезон",peak:"пиковый сезон"};
 function periodOf(id,d){const ps=RES[id].periods||[];for(const [a,b,n] of ps)if(d>=sd(a)&&d<=sd(b))return n;return "low"}
@@ -705,7 +700,6 @@ $("tabs").addEventListener("click",e=>{const b=e.target.closest("[data-t]");if(!
 function fillForm(id){
   const R=RES[id],r=S.r[id],dt=DT(id);
   $("shareDates").checked=S.shareDates;
-  $("meName").value=S.meta.me||"";$("otherName").value=S.meta.other||"";
   DATEF.forEach(k=>$(k).value=dt[k]);
   FIELDS.forEach(k=>{const el=$(k);if(el.type==="checkbox")el.checked=!!r[k];else el.value=r[k]});
   $("flightTitle").textContent=`Перелёт Москва ⇄ ${R.airport}`;
@@ -758,10 +752,6 @@ function renderResort(){
   renderPrices();
 }
 
-["meName","otherName"].forEach(k=>$(k).addEventListener("input",()=>{
-  S.meta={...S.meta,[k==="meName"?"me":"other"]:$(k).value.trim()};persist();renderTabs();if(S.tab!=="compare")renderResort();renderSync();
-}));
-
 /* Цены Aviasales: ориентир — самый дешёвый прямой рейс на даты, любая авиакомпания */
 const KEYP=p=>`${p.depart}|${p.ret}`;
 const bagOf=id=>S.r[id].bag?RES[id].bag:0;
@@ -779,41 +769,10 @@ function renderPrices(){
     return d?`<span class="tr ${d<0?"dn":"up"}" title="С прошлой проверки">${d<0?"↓":"↑"}${fmt(Math.abs(d)).replace(" ₽","")}</span>`:""};
   const rowsH=list.map(p=>{const a=parseD(p.depart),b=parseD(p.ret),ts=tripScore(id,a,b),k=KEYP(p),on=k0===k&&r.fareFor===k&&!r.own;
     return `<tr class="${k0===k?"mine":""}"><td><span class="dot" style="background:${col(ts)}" title="Условия: ${verdict(ts)}"></span>${short(a)} – ${short(b)}${trend(k)}</td><td>${p.days}</td><td><button type="button" class="pick${on?" on":""}" data-k="${k}" title="Подставить в расчёт"><b>${fmt(p.price+bf)}</b><small>без багажа ${fmt(p.price)}</small></button></td></tr>`}).join("");
-  box.innerHTML=dateChart(id,list,k0,bf)+histChart(HS[k0],k0,bf)+`<div class="ptable"><table><thead><tr><th>Даты</th><th>Дней</th><th>${bf?"С багажом, примерно":"Без багажа"}</th></tr></thead><tbody>${rowsH}</tbody></table></div><p class="hint" style="margin-top:6px">Кружок у дат — условия сезона в эти дни.</p>`;
-}
-/* Цены по датам вылета: самый дешёвый вариант на каждый день окна. Цвет — условия сезона, клик — подставить. */
-function dateChart(id,list,k0,bf){
-  const pr=PR[id],a0=parseD(pr.from),a1=parseD(pr.to);if(!a0||!a1)return "";
-  const n=Math.max(1,Math.round((a1-a0)/864e5)+1),best={};
-  for(const p of list){if(!best[p.depart]||p.price<best[p.depart].price)best[p.depart]=p}
-  const ps=Object.values(best).map(p=>p.price),lo=Math.min(...ps),hi=Math.max(...ps),W=n*10;
-  const H=p=>hi===lo?50:18+(p-lo)/(hi-lo)*62, sel=k0.split("|")[0];
-  const bars=Object.values(best).map(p=>{const i=Math.round((parseD(p.depart)-a0)/864e5),h=H(p.price),k=KEYP(p),a=parseD(p.depart),b=parseD(p.ret),on=p.depart===sel;
-    return `<rect class="bar${on?" on":""}" data-k="${k}" x="${i*10+1}" y="${90-h}" width="8" height="${h}" rx="1.5" fill="${col(tripScore(id,a,b))}"><title>${short(a)} – ${short(b)}, ${p.days} дн.: ${fmt(p.price+bf)}${bf?" с багажом":""}</title></rect>`}).join("");
-  const months=[];for(let d=new Date(a0.getFullYear(),a0.getMonth()+1,1);d<=a1;d=new Date(d.getFullYear(),d.getMonth()+1,1))months.push(`<span style="left:${((d-a0)/864e5/n*100).toFixed(1)}%">${MONS[d.getMonth()]}</span>`);
-  const cheap=Object.values(best).reduce((x,y)=>y.price<x.price?y:x);
-  return `<div class="hist"><span class="lbl">Цены по датам вылета${bf?", с багажом":""}</span>
-  <svg class="dates" viewBox="0 0 ${W} 90" preserveAspectRatio="none" role="img" aria-label="Цены по датам вылета">${bars}</svg>
-  <div class="months">${months.join("")}</div>
-  <span class="cap">Столбик — самый дешёвый вариант с вылетом в этот день, цвет — условия сезона. Нажмите, чтобы подставить. Дешевле всего: ${short(parseD(cheap.depart))} – ${short(parseD(cheap.ret))}, ${fmt(cheap.price+bf)}; дороже всего ${fmt(hi+bf)}.</span></div>`;
-}
-/* История цены на выбранные даты: точки — проверки (ваши нажатия и ежедневная проверка сайта) */
-function histChart(H,k,bf){
-  const [a,b]=k.split("|").map(parseD),dates=a&&b?`${short(a)}–${short(b)}`:"";
-  if(!H||!H.length)return "";
-  if(H.length<2){const day=new Date(H[0][0]).toLocaleDateString("ru-RU",{day:"numeric",month:"short"});
-    return `<div class="hist"><span class="lbl">История цены на ${dates}</span><span class="cap">Пока одна проверка: ${day} — ${fmt(H[0][1]+bf)}. Линия появится со следующей проверки — сайт сам проверяет цены каждое утро.</span></div>`}
-  const P=H.map(([t,p])=>[t,p+bf]),t0=P[0][0],t1=P[P.length-1][0],ps=P.map(x=>x[1]),lo=Math.min(...ps),hi=Math.max(...ps);
-  const X=t=>t1===t0?150:6+(t-t0)/(t1-t0)*288,Y=p=>hi===lo?35:8+(hi-p)/(hi-lo)*54;
-  const pts=P.map(([t,p])=>`${X(t).toFixed(1)},${Y(p).toFixed(1)}`).join(" ");
-  const day=t=>new Date(t).toLocaleDateString("ru-RU",{day:"numeric",month:"short"});
-  const last=ps[ps.length-1],first=ps[0],d=last-first;
-  return `<div class="hist"><span class="lbl">Цена на ${dates}${bf?", с багажом":""}</span>
-  <svg viewBox="0 0 300 70" preserveAspectRatio="none" role="img" aria-label="График цены"><polyline points="${pts}" fill="none" stroke="var(--accent)" stroke-width="2" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>${P.map(([t,p])=>`<circle cx="${X(t).toFixed(1)}" cy="${Y(p).toFixed(1)}" r="2.5" fill="${p===lo?"var(--green)":"var(--accent)"}" vector-effect="non-scaling-stroke"><title>${day(t)}: ${fmt(p)}</title></circle>`).join("")}</svg>
-  <span class="cap">${day(t0)}: ${fmt(first)} → ${day(t1)}: <b>${fmt(last)}</b>${d?` (${d<0?"−":"+"}${fmt(Math.abs(d))})`:""} · минимум ${fmt(lo)} · проверок: ${P.length}</span></div>`;
+  box.innerHTML=`<div class="ptable"><table><thead><tr><th>Даты</th><th>Дней</th><th>${bf?"С багажом, примерно":"Без багажа"}</th></tr></thead><tbody>${rowsH}</tbody></table></div><p class="hint" style="margin-top:6px">Кружок у дат — условия сезона в эти дни.</p>`;
 }
 $("fares").addEventListener("click",e=>{
-  const b=e.target.closest(".pick,.bar"),id=S.tab;if(!b||!PR[id])return;
+  const b=e.target.closest(".pick"),id=S.tab;if(!b||!PR[id])return;
   const p=PR[id].prices.find(x=>KEYP(x)===b.dataset.k);if(p){applyFare(id,p);PR[id].note="";persistPrices();persist();renderAll(true)}
 });
 function setTrip(id,p){
@@ -926,25 +885,23 @@ $("reset").addEventListener("click",()=>{const id=S.tab;S.r[id]={...clone(RES[id
 const SKEY="gory-sync-v1";
 let SY={at:{},synced:{}};try{SY=JSON.parse(localStorage.getItem(SKEY)||"null")||SY}catch(e){}
 const saveSY=()=>{try{localStorage.setItem(SKEY,JSON.stringify(SY))}catch(e){}};
-let WHO="";try{WHO=localStorage.getItem("gory-who")||""}catch(e){}
-let pushT=null,pulling=false,lastPull=0,syncErr="",lastBy=null,syncReady=false;
-const PARTN=k=>k==="dates"?"даты":k==="meta"?"имена":RES[k.slice(2)]?RES[k.slice(2)].name:k;
+let pushT=null,pulling=false,lastPull=0,syncErr="",syncReady=false;
 const canon=o=>JSON.stringify(o,(k,v)=>v&&typeof v==="object"&&!Array.isArray(v)?Object.keys(v).sort().reduce((a,x)=>(a[x]=v[x],a),{}):v);
-const DEFP=(()=>{const f=fresh(),o={dates:{shareDates:f.shareDates,dates:f.dates},meta:f.meta};IDS.forEach(id=>o["r:"+id]=f.r[id]);return o})();
-function partsOf(){const o={dates:{shareDates:S.shareDates,dates:S.dates},meta:S.meta};IDS.forEach(id=>o["r:"+id]=S.r[id]);return o}
+const DEFP=(()=>{const f=fresh(),o={dates:{shareDates:f.shareDates,dates:f.dates}};IDS.forEach(id=>o["r:"+id]=f.r[id]);return o})();
+function partsOf(){const o={dates:{shareDates:S.shareDates,dates:S.dates}};IDS.forEach(id=>o["r:"+id]=S.r[id]);return o}
 function changedParts(){const o=partsOf(),out={};for(const k in o){if(SY.synced[k]!==canon(o[k]))out[k]=o[k]}return out}
 function schedulePush(){if(!syncReady)return;clearTimeout(pushT);pushT=setTimeout(()=>push(),4000);renderSync()}
 async function push(beacon){
   clearTimeout(pushT);pushT=null;
   const ch=changedParts();if(!Object.keys(ch).length){renderSync();return}
-  const body=JSON.stringify({parts:ch,by:([S.meta.me,S.meta.other].includes(WHO)?WHO:S.meta.me)||""});
+  const body=JSON.stringify({parts:ch});
   if(beacon){try{navigator.sendBeacon("/api/live",new Blob([body],{type:"application/json"}))}catch(e){}return}
   try{
     const r=await fetch("/api/live",{method:"POST",headers:{"content-type":"application/json"},body});
     if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||"код "+r.status)}
     const parts=(await r.json()).parts||{};
     for(const k in ch){SY.synced[k]=canon(ch[k]);SY.at[k]=(parts[k]||{}).at||Date.now()}
-    syncErr="";saveSY();noteBy(parts);
+    syncErr="";saveSY();
   }catch(e){syncErr=`не удалось сохранить (${e.message})`}
   renderSync();
 }
@@ -955,17 +912,16 @@ async function pull(){
     if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||"код "+r.status)}
     const parts=(await r.json()).parts||{};
     syncReady=true;
-    const loc=partsOf(),next={v:5,tab:S.tab,shareDates:S.shareDates,dates:S.dates,meta:S.meta,r:{...S.r}};let changed=false;
+    const loc=partsOf(),next={v:5,tab:S.tab,shareDates:S.shareDates,dates:S.dates,r:{...S.r}};let changed=false;
     for(const k in parts){const p=parts[k];if(!(p.at>(SY.at[k]||0)))continue;
       /* у нас есть неотправленные правки этой части — оставляем их, они уйдут следующей отправкой */
       if(SY.synced[k]!=null&&canon(loc[k])!==SY.synced[k])continue;
       /* на сервере нетронутые значения по умолчанию (кто-то открыл сайт впервые), а у нас настоящий расчёт — оставляем свой */
       if(SY.synced[k]==null&&canon(p.v)===canon(DEFP[k])&&canon(loc[k])!==canon(DEFP[k]))continue;
       if(k==="dates"){next.shareDates=p.v.shareDates!==false;next.dates=p.v.dates}
-      else if(k==="meta")next.meta=p.v;
       else if(RES[k.slice(2)])next.r[k.slice(2)]=p.v;
       SY.synced[k]=canon(p.v);SY.at[k]=p.at;changed=true}
-    syncErr="";saveSY();noteBy(parts);
+    syncErr="";saveSY();
     if(changed){S=migrate(next);try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
       /* не перерисовываем поле, в котором человек сейчас печатает */
       const f=document.activeElement;renderAll(!(f&&f.matches&&f.matches("input,select")))}
@@ -973,19 +929,11 @@ async function pull(){
   }catch(e){syncErr=`нет связи с сервером (${e.message})`}
   finally{pulling=false;renderSync()}
 }
-function noteBy(parts){
-  const me=WHO||S.meta.me;let b=null;
-  for(const k in parts){const p=parts[k];if(p.by&&p.by!==me&&(!b||p.at>b.at))b={by:p.by,at:p.at,k}}
-  if(b)lastBy=b;
-}
 function renderSync(){
   const st=!syncReady?(syncErr?`⚠ ${syncErr}`:"загружаю…"):syncErr?`⚠ ${syncErr}`:pushT?"сохраняю…":"всё сохранено";
-  const t=x=>new Date(x).toLocaleString("ru-RU",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"});
-  const names=[S.meta.me,S.meta.other].filter(Boolean),who=names.includes(WHO)?WHO:S.meta.me;
-  $("sync").innerHTML=`Общий расчёт для всех, кто открывает сайт · ${esc(st)}${lastBy?` · последнее изменение: ${esc(lastBy.by)}, ${t(lastBy.at)} (${esc(PARTN(lastBy.k))})`:""} · <button type="button" id="syncNow">обновить</button> · вы: <select id="who" aria-label="Кто вы">${names.map(n=>`<option${n===who?" selected":""}>${esc(n)}</option>`).join("")}</select>`;
+  $("sync").innerHTML=`Общий расчёт для всех, кто открывает сайт · ${esc(st)} · <button type="button" id="syncNow">обновить</button>`;
 }
 $("sync").addEventListener("click",e=>{if(e.target.id==="syncNow")pull()});
-$("sync").addEventListener("change",e=>{if(e.target.id==="who"){WHO=e.target.value;try{localStorage.setItem("gory-who",WHO)}catch(x){}renderSync()}});
 document.addEventListener("visibilitychange",()=>{if(document.hidden){if(pushT)push(true)}else if(Date.now()-lastPull>20000)pull()});
 window.addEventListener("pagehide",()=>{if(pushT)push(true)});
 
@@ -998,6 +946,24 @@ async function loadSaved(){
     savedItems=(await r.json()).items||[];renderSaved();
   }catch(e){$("savedList").innerHTML="";$("savedEmpty").hidden=false;$("savedEmpty").textContent=`Не удалось загрузить сохранения (${e.message}). Общие сохранения работают только на сайте на Vercel.`}
 }
+/* Как менялась цена билета на даты сохранённого расчёта: по строке на курорт */
+function spark(P){
+  const W=120,H=26;if(P.length<2)return `<svg viewBox="0 0 ${W} ${H}" aria-hidden="true"><circle cx="${W/2}" cy="${H/2}" r="3" fill="var(--accent)"/></svg>`;
+  const t0=P[0][0],t1=P[P.length-1][0],ps=P.map(x=>x[1]),lo=Math.min(...ps),hi=Math.max(...ps);
+  const X=t=>t1===t0?W/2:3+(t-t0)/(t1-t0)*(W-6),Y=p=>hi===lo?H/2:3+(hi-p)/(hi-lo)*(H-6);
+  return `<svg viewBox="0 0 ${W} ${H}" aria-hidden="true"><polyline points="${P.map(([t,p])=>`${X(t).toFixed(1)},${Y(p).toFixed(1)}`).join(" ")}" fill="none" stroke="var(--accent)" stroke-width="1.8" stroke-linejoin="round"/>${P.map(([t,p])=>`<circle cx="${X(t).toFixed(1)}" cy="${Y(p).toFixed(1)}" r="1.8" fill="var(--accent)"/>`).join("")}</svg>`;
+}
+function saveHist(s,show){
+  if(!show||!s.hist)return "";
+  const st=s.state||{},day=t=>new Date(t).toLocaleDateString("ru-RU",{day:"numeric",month:"short"});
+  const rows=Object.entries(s.hist).filter(([id])=>RES[id]).map(([id,h])=>{
+    const r=st.r&&st.r[id],bf=(st.v===5?r&&r.bag!==false:true)?RES[id].bag:0;
+    const [a,b]=h.key.split("|").map(parseD),dates=`${short(a)}–${short(b)}`,P=(h.points||[]).map(([t,p])=>[t,p+bf]);
+    if(!P.length)return `<span class="sh-n">${RES[id].name}</span><span class="sh-g muted">${dates}: цены пока нет — сайт проверит утром</span><span></span>`;
+    const last=P[P.length-1][1],d=last-P[0][1];
+    return `<span class="sh-n">${RES[id].name}</span><span class="sh-g" title="${P.map(([t,p])=>`${day(t)}: ${fmt(p)}`).join("\n")}">${spark(P)}<small>${dates} · ${P.length} ${plural(P.length,"проверка","проверки","проверок")} с ${day(P[0][0])}</small></span><span class="sh-v">${fmt(last)}${d?`<span class="tr ${d<0?"dn":"up"}">${d<0?"↓":"↑"}${fmt(Math.abs(d)).replace(" ₽","")}</span>`:""}</span>`}).join("");
+  return rows?`<div class="shist">${rows}</div>`:"";
+}
 function renderSaved(){
   const list=savedItems.filter(s=>!delPending.has(s.id));
   $("savedEmpty").hidden=list.length>0;
@@ -1006,7 +972,7 @@ function renderSaved(){
     const d=new Date(s.at);
     const parts=s.summary&&s.summary.length?s.summary.map(x=>`${x.r} ${fmtK(x.pp)}`):[`Шерегеш ${fmtK(s.pp||0)}`,s.airline,s.trip].filter(Boolean);
     const meta=[...parts,d.toLocaleDateString("ru-RU",{day:"numeric",month:"short"})].join(" · ");
-    return `<li><div class="info"><b title="${esc(s.name)}">${esc(s.name)}</b><span>${esc(meta)}</span></div><button type="button" data-open="${esc(s.id)}">Открыть</button><button type="button" data-upd="${esc(s.id)}" title="Записать в это сохранение текущий расчёт">Обновить</button><button type="button" class="del" data-del="${esc(s.id)}" aria-label="Удалить">✕</button></li>`}).join("");
+    return `<li><div class="info"><b title="${esc(s.name)}">${esc(s.name)}</b><span>${esc(meta)}</span></div><button type="button" data-open="${esc(s.id)}">Открыть</button><button type="button" data-upd="${esc(s.id)}" title="Записать в это сохранение текущий расчёт">Обновить</button><button type="button" class="del" data-del="${esc(s.id)}" aria-label="Удалить">✕</button>${saveHist(s,1)}</li>`}).join("");
 }
 const summaryNow=()=>IDS.map(id=>({r:RES[id].name,pp:Math.round(calc(id).total)}));
 async function postSave(body){
