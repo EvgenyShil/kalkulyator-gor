@@ -151,15 +151,14 @@ button.primary:disabled{opacity:.6;cursor:progress}
 .sync{margin:-8px 0 0;font-size:12.5px;color:var(--muted)}
 .sync select{font:inherit;font-size:12.5px;color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:2px 4px}
 .sync button{font:inherit;font-size:12.5px;background:none;border:none;color:var(--accent);cursor:pointer;padding:0;text-decoration:underline}
-.payers{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;align-items:center;font-size:14px}
-.payers select{width:auto;min-width:150px;padding:6px 8px;font-size:14px}
-.payers small{color:var(--muted);font-variant-numeric:tabular-nums}
-.debt{margin:0;font-weight:700;font-size:15px}
-.debt small{display:block;font-weight:500;font-size:12.5px;color:var(--muted)}
 .undo{margin:0;font-size:13.5px;background:var(--warn-soft);border-radius:7px;padding:8px 10px}
 .undo button{font:inherit;font-weight:700;background:none;border:none;color:var(--accent);cursor:pointer;text-decoration:underline;margin-left:6px}
 .hist{display:flex;flex-direction:column;gap:4px;margin-top:4px}
 .hist svg{width:100%;height:70px;display:block;overflow:visible}
+.hist svg.dates{height:90px}
+.hist .bar{cursor:pointer;opacity:.85}
+.hist .bar:hover{opacity:1}
+.hist .bar.on{stroke:var(--fg);stroke-width:2;vector-effect:non-scaling-stroke;opacity:1}
 .hist .cap{font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
 .tr{font-size:11px;font-weight:700;margin-left:4px}
 .tr.dn{color:var(--green)} .tr.up{color:var(--red)}
@@ -355,13 +354,6 @@ button.primary:disabled{opacity:.6;cursor:progress}
     <p class="hint" id="taxiHint">В такси 4 места: если вас больше четырёх, считаю две машины.</p>
   </section>
 
-  <section class="box">
-    <h2><span class="mark g"></span>Кто платит</h2>
-    <p class="hint">Отметьте, кто за что платит за всех. Сайт посчитает, кто кому должен. Запас на непредвиденное в долги не входит.</p>
-    <div class="payers" id="payers"></div>
-    <p class="debt" id="debt"></p>
-  </section>
-
   <button type="button" class="link" id="reset">Вернуть исходные значения для этого курорта</button>
 </div>
 
@@ -371,8 +363,6 @@ button.primary:disabled{opacity:.6;cursor:progress}
     <span class="big" id="perPerson">—</span>
     <span class="sub" id="tripLine">—</span>
   </div>
-  <p class="sub" id="otherLine" hidden></p>
-  <p class="debt" id="debtAside" hidden></p>
   <ul class="warns" id="warns"></ul>
   <div style="overflow-x:auto">
   <table>
@@ -457,7 +447,7 @@ const RES={
     est:{},foodMin:2500,alcoMin:800,
     def:{people:"2",wife:false,base:36248,bag:true,xs:"0",xsPrice:3320,hotelNight:38500,hotelMode:"total",hotelNights:7,nights:7,room:"all",prepay:30,
       transfer:2800,transferMode:"person",transferWays:"2",skiDays:6,passType:"edin",passOwn:"",guideDays:2,guideType:"full",guidePrice:12000,promo:true,halfPass:true,
-      rent:"",rentDays:6,taxi:300,rides:2,food:3000,alco:1000,foodDays:7,extra:0,ins:2000,reserve:10,payBy:{}}},
+      rent:"",rentDays:6,taxi:300,rides:2,food:3000,alco:1000,foodDays:7,extra:0,ins:2000,reserve:10}},
   kirovsk:{where:"В Кировске",name:"Кировск",dest:"KVK",airport:"Апатиты",lat:67.6,open:"11-25",close:"05-31",
     snow:[["11-25",.35],["12-15",.6],["01-15",.72],["02-15",.88],["03-10",1],["04-20",1],["05-10",.75],["05-31",.4]],
     notes:{11:"Открытие, почти всё время темно",12:"Полярная ночь: катание под фонарями",1:"Солнце возвращается в середине января, морозы",2:"Светлеет быстро, снег хороший",3:"Лучшее: снег и длинный день",4:"Отлично, весенний фрирайд",5:"Весна, сезон до конца мая"},
@@ -474,7 +464,7 @@ const RES={
     est:{hotel:1,guide:1,transfer:1},foodMin:2000,alcoMin:700,
     def:{people:"2",wife:false,base:28572,bag:true,xs:"0",xsPrice:2500,hotelNight:35000,hotelMode:"total",hotelNights:7,nights:7,room:"all",prepay:30,
       transfer:2000,transferMode:"car",transferWays:"2",skiDays:6,passType:"bw",passOwn:"",guideDays:0,guideType:"full",guidePrice:10000,promo:false,halfPass:true,
-      rent:"",rentDays:6,taxi:400,rides:2,food:2500,alco:1000,foodDays:7,extra:0,ins:2000,reserve:10,payBy:{}}},
+      rent:"",rentDays:6,taxi:400,rides:2,food:2500,alco:1000,foodDays:7,extra:0,ins:2000,reserve:10}},
   sochi:{where:"На Красной Поляне",name:"Сочи",dest:"AER",airport:"Сочи",lat:43.68,open:"12-10",close:"04-20",
     snow:[["12-10",.3],["12-25",.55],["01-10",.75],["02-01",.9],["02-20",1],["03-10",.9],["03-31",.65],["04-12",.4],["04-20",.2]],
     notes:{12:"Открытие, снег не гарантирован",1:"Снег стабильный, на праздники дорого",2:"Лучший снег",3:"Хорошо, к концу месяца весна",4:"Весна, внизу тает"},
@@ -493,7 +483,7 @@ const RES={
     est:{hotel:1,transfer:1},foodMin:3500,alcoMin:1000,
     def:{people:"2",wife:false,base:24393,bag:true,xs:"0",xsPrice:2500,hotelNight:56000,hotelMode:"total",hotelNights:7,nights:7,room:"all",prepay:30,
       transfer:3500,transferMode:"car",transferWays:"2",skiDays:6,passType:"rosa",passOwn:"",guideDays:2,guideType:"full",guidePrice:12000,promo:false,halfPass:true,
-      rent:"",rentDays:6,taxi:0,rides:0,food:4000,alco:1500,foodDays:7,extra:0,ins:2000,reserve:10,payBy:{}}},
+      rent:"",rentDays:6,taxi:0,rides:0,food:4000,alco:1500,foodDays:7,extra:0,ins:2000,reserve:10}},
   elbrus:{where:"На Эльбрусе",name:"Эльбрус",dest:"MRV",airport:"Минеральные Воды",lat:43.3,open:"12-01",close:"05-10",
     snow:[["12-01",.35],["12-20",.6],["01-15",.72],["02-01",.85],["02-20",.95],["03-15",1],["04-01",.9],["04-20",.7],["05-10",.35]],
     notes:{12:"Открытие, бывают сильные ветра",1:"Холодно и ветрено наверху",2:"Хорошо",3:"Лучшее время, много солнца",4:"Весна, наверху ещё отлично",5:"Конец сезона"},
@@ -509,7 +499,7 @@ const RES={
     est:{hotel:1,guide:1,transfer:1},foodMin:2000,alcoMin:700,
     def:{people:"2",wife:false,base:22679,bag:true,xs:"0",xsPrice:2500,hotelNight:31500,hotelMode:"total",hotelNights:7,nights:7,room:"all",prepay:30,
       transfer:12000,transferMode:"car",transferWays:"2",skiDays:6,passType:"pre",passOwn:"",guideDays:2,guideType:"full",guidePrice:10000,promo:false,halfPass:true,
-      rent:"",rentDays:6,taxi:500,rides:2,food:2500,alco:1000,foodDays:7,extra:0,ins:2000,reserve:10,payBy:{}}},
+      rent:"",rentDays:6,taxi:500,rides:2,food:2500,alco:1000,foodDays:7,extra:0,ins:2000,reserve:10}},
 };
 const IDS=Object.keys(RES);
 const FIELDS=Object.keys(RES.sheregesh.def).filter(k=>document.getElementById(k)); /* служебные поля вроде hotelNights в форме не показываются */
@@ -606,8 +596,6 @@ document.addEventListener("pointermove",e=>{
 document.addEventListener("pointerleave",()=>tip.hidden=true);
 
 /* Расчёт курорта: всё в рублях на меня (на меня и жену, если едем вдвоём) */
-/* Статьи для «Кто платит» */
-const PAYCATS=[["ticket","Билеты"],["xs","Места с доп. пространством"],["hotel","Отель"],["transfer","Трансфер"],["pass","Ски-пасс"],["guide","Гид"],["rent","Аренда"],["taxi","Такси"],["food","Еда"],["alco","Алкоголь"],["ins","Страховка"],["extra","Прочее"]];
 const nm=k=>esc((S.meta&&S.meta[k])||(k==="me"?"Я":"Содержанка"));
 /* Ски-пасс: тарифы курорта по периодам, многодневные выгоднее — берём самую дешёвую комбинацию */
 const PERN={low:"низкий сезон",high:"высокий сезон",peak:"пиковый сезон"};
@@ -667,12 +655,6 @@ function calc(id){
   if(res)rows.push({n:"Запас на непредвиденное",d:`${nz(r.reserve)}% от суммы`,v:res});
   const total=sub+res;
 
-  /* Доля остальных и кто кому должен. У остальных отдельный номер той же цены, если у вас свой номер. */
-  const others=N-my, sepRoom=r.wife||r.room==="one";
-  const oth=c=>!others?0:c==="hotel"&&sepRoom?hotelTotal:v[c]/my*others;
-  const PB=r.payBy||{}, debts=[];let net=0;
-  for(const [c] of PAYCATS){const w=PB[c]||"self";if(w==="me"&&oth(c)){net+=oth(c);debts.push([c,oth(c)])}if(w==="other"&&v[c]){net-=v[c];debts.push([c,-v[c]])}}
-  const otherPP=others?PAYCATS.reduce((s,[c])=>s+oth(c),0)/others*(1+Math.min(50,nz(r.reserve))/100):0;
 
   /* Когда платить */
   const pre=Math.min(100,nz(r.prepay))/100;
@@ -709,7 +691,7 @@ function calc(id){
   }
   if(N>4)W.push({i:1,t:`Вас ${N}: в такси 4 места, считаю ${cars} машины.`});
   if(R.est.hotel)W.push({i:1,t:`Цены ${[R.est.hotel&&"отеля",R.est.guide&&"гида",R.est.transfer&&"трансфера"].filter(Boolean).join(", ")} примерные — поправьте, когда узнаете точные.`});
-  return {rows,total,v,pay,net,debts,otherPP,others,oth,warns:W.map(w=>typeof w==="string"?{t:w}:w),my,N,ta,tb,src,PS,nights,ski,gd,half,passDays};
+  return {rows,total,v,pay,warns:W.map(w=>typeof w==="string"?{t:w}:w),my,N,ta,tb,src,PS,nights,ski,gd,half,passDays};
 }
 
 /* Отрисовка вкладок */
@@ -737,7 +719,7 @@ function fillForm(id){
   $("baseLbl").textContent=r.bag?"Билет с багажом, туда-обратно, ₽ / чел.":"Билет без багажа, туда-обратно, ₽ / чел.";
   $("guideEst").textContent=R.est.guide?"примерно":"";$("transferEst").textContent=R.est.transfer?"примерно":"";
   $("room").disabled=!!r.wife;
-  $("pricesHint").textContent=`Ориентир по кэшу Aviasales: самый дешёвый прямой рейс Москва ⇄ ${R.airport} на каждые даты в вашем окне, любая авиакомпания, туда-обратно на 1 человека. Крупно — с доплатой за багаж из поля ниже, мелко — без багажа. Нажмите на цену, чтобы подставить её. Реальную цену проверьте по ссылке и при желании впишите свою в поле «Билет».`;
+  $("pricesHint").textContent=`Ориентир по кэшу Aviasales: самый дешёвый прямой рейс Москва ⇄ ${R.airport} на каждые даты в вашем окне, любая авиакомпания, туда-обратно на 1 человека. Крупно — с багажом (ориентир + ${fmt(R.bag)}), мелко — без багажа. Нажмите на цену, чтобы подставить её. Реальную цену проверьте по ссылке и при желании впишите свою в поле «Билет».`;
 }
 
 /* Состояние ← поле формы */
@@ -763,7 +745,6 @@ function renderResort(){
   $("peopleHint").textContent=c.my>1?`Едет ${c.N}, из них вы с женой. Билеты, ски-пасс, еда и прочее считаются за двоих, номер целиком ваш.`:`Отель${r.room==="all"?" и такси делятся":", такси делится"} на ${c.N}. В такси 4 места.`;
   const pt=c.PS,src=R.passSrc;
   $("passHint").innerHTML=`По тарифу на ${c.passDays} ${plural(c.passDays,"день","дня","дней")}: <b>${fmt(pt.auto)}</b> на человека${pt.period!=="low"?` (${PERN[pt.period]})`:""}${pt.own?", но в расчёте ваша цена":""}. Цены сезона 2025/26 с <a href="${src[1]}" target="_blank" rel="noopener">${src[0]}</a>${id==="elbrus"?", абонемент 2026/27 действует в любые дни сезона":""}.`;
-  renderPayers(id,c);
   $("season").innerHTML=seasonBar(id);
   const ts=c.ta&&c.tb?tripScore(id,c.ta,c.tb):null;
   $("seasonHint").textContent=`Наведите на полоску, чтобы увидеть условия по датам. Оценки примерные: снег${id==="kirovsk"?" и световой день (нижняя полоска)":""}.${ts!=null?` Ваши даты: ${verdict(ts)}.`:""}${S.shareDates?" Даты общие для всех курортов.":""}`;
@@ -777,30 +758,6 @@ function renderResort(){
   renderPrices();
 }
 
-/* Кто платит и кто кому должен */
-function debtText(c){
-  if(!c.debts.length)return "";
-  const me=nm("me"),ot=nm("other"),per=c.others>1?` <small>по ${fmt(Math.abs(c.net)/c.others)} с каждого из ${c.others}</small>`:"";
-  if(Math.round(c.net)>0)return `Долг: ${ot} → ${me}, ${fmt(c.net)}${per}`;
-  if(Math.round(c.net)<0)return `Долг: ${me} → ${ot}, ${fmt(-c.net)}`;
-  return "Никто никому не должен";
-}
-function renderPayers(id,c){
-  const PB=S.r[id].payBy||{},me=nm("me"),ot=nm("other");
-  const cats=PAYCATS.filter(([k])=>c.v[k]||c.oth(k));
-  $("payers").innerHTML=cats.map(([k,n])=>{const w=PB[k]||"self";
-    return `<span>${n} <small>· ${me} ${fmt(c.v[k])}${c.others?`, ${ot} ${fmt(c.oth(k))}`:""}</small></span><select data-c="${k}" aria-label="Кто платит: ${n}"><option value="self"${w==="self"?" selected":""}>каждый сам</option><option value="me"${w==="me"?" selected":""}>${me} за всех</option>${c.others?`<option value="other"${w==="other"?" selected":""}>${ot} за всех</option>`:""}</select>`}).join("");
-  const dt=debtText(c);
-  $("debt").innerHTML=dt?dt+`<small>${c.debts.map(([k,a])=>`${PAYCATS.find(x=>x[0]===k)[1]}: ${a>0?`${ot} → ${me}`:`${me} → ${ot}`} ${fmt(Math.abs(a))}`).join(" · ")}</small>`:(c.others?"Каждый платит сам за себя — долгов нет.":"Едете одни — делить нечего.");
-  $("debtAside").hidden=!dt;$("debtAside").innerHTML=dt;
-  $("otherLine").hidden=!c.others;
-  $("otherLine").textContent=c.others?`${S.meta.other||"Содержанка"}: ≈ ${fmt(c.otherPP)} на человека${S.r[id].wife||S.r[id].room==="one"?", если у него свой номер той же цены":""}`:"";
-}
-$("payers").addEventListener("change",e=>{
-  const sel=e.target.closest("select[data-c]");if(!sel||S.tab==="compare")return;
-  const r=S.r[S.tab];r.payBy={...(r.payBy||{}),[sel.dataset.c]:sel.value};
-  persist();renderTabs();renderResort();
-});
 ["meName","otherName"].forEach(k=>$(k).addEventListener("input",()=>{
   S.meta={...S.meta,[k==="meName"?"me":"other"]:$(k).value.trim()};persist();renderTabs();if(S.tab!=="compare")renderResort();renderSync();
 }));
@@ -822,12 +779,30 @@ function renderPrices(){
     return d?`<span class="tr ${d<0?"dn":"up"}" title="С прошлой проверки">${d<0?"↓":"↑"}${fmt(Math.abs(d)).replace(" ₽","")}</span>`:""};
   const rowsH=list.map(p=>{const a=parseD(p.depart),b=parseD(p.ret),ts=tripScore(id,a,b),k=KEYP(p),on=k0===k&&r.fareFor===k&&!r.own;
     return `<tr class="${k0===k?"mine":""}"><td><span class="dot" style="background:${col(ts)}" title="Условия: ${verdict(ts)}"></span>${short(a)} – ${short(b)}${trend(k)}</td><td>${p.days}</td><td><button type="button" class="pick${on?" on":""}" data-k="${k}" title="Подставить в расчёт"><b>${fmt(p.price+bf)}</b><small>без багажа ${fmt(p.price)}</small></button></td></tr>`}).join("");
-  box.innerHTML=histChart(HS[k0],k0,bf)+`<div class="ptable"><table><thead><tr><th>Даты</th><th>Дней</th><th>${bf?"С багажом, примерно":"Без багажа"}</th></tr></thead><tbody>${rowsH}</tbody></table></div><p class="hint" style="margin-top:6px">Кружок у дат — условия сезона в эти дни.</p>`;
+  box.innerHTML=dateChart(id,list,k0,bf)+histChart(HS[k0],k0,bf)+`<div class="ptable"><table><thead><tr><th>Даты</th><th>Дней</th><th>${bf?"С багажом, примерно":"Без багажа"}</th></tr></thead><tbody>${rowsH}</tbody></table></div><p class="hint" style="margin-top:6px">Кружок у дат — условия сезона в эти дни.</p>`;
 }
-/* График цены на выбранные даты: точки — проверки (ваши нажатия и ежедневная проверка сайта) */
+/* Цены по датам вылета: самый дешёвый вариант на каждый день окна. Цвет — условия сезона, клик — подставить. */
+function dateChart(id,list,k0,bf){
+  const pr=PR[id],a0=parseD(pr.from),a1=parseD(pr.to);if(!a0||!a1)return "";
+  const n=Math.max(1,Math.round((a1-a0)/864e5)+1),best={};
+  for(const p of list){if(!best[p.depart]||p.price<best[p.depart].price)best[p.depart]=p}
+  const ps=Object.values(best).map(p=>p.price),lo=Math.min(...ps),hi=Math.max(...ps),W=n*10;
+  const H=p=>hi===lo?50:18+(p-lo)/(hi-lo)*62, sel=k0.split("|")[0];
+  const bars=Object.values(best).map(p=>{const i=Math.round((parseD(p.depart)-a0)/864e5),h=H(p.price),k=KEYP(p),a=parseD(p.depart),b=parseD(p.ret),on=p.depart===sel;
+    return `<rect class="bar${on?" on":""}" data-k="${k}" x="${i*10+1}" y="${90-h}" width="8" height="${h}" rx="1.5" fill="${col(tripScore(id,a,b))}"><title>${short(a)} – ${short(b)}, ${p.days} дн.: ${fmt(p.price+bf)}${bf?" с багажом":""}</title></rect>`}).join("");
+  const months=[];for(let d=new Date(a0.getFullYear(),a0.getMonth()+1,1);d<=a1;d=new Date(d.getFullYear(),d.getMonth()+1,1))months.push(`<span style="left:${((d-a0)/864e5/n*100).toFixed(1)}%">${MONS[d.getMonth()]}</span>`);
+  const cheap=Object.values(best).reduce((x,y)=>y.price<x.price?y:x);
+  return `<div class="hist"><span class="lbl">Цены по датам вылета${bf?", с багажом":""}</span>
+  <svg class="dates" viewBox="0 0 ${W} 90" preserveAspectRatio="none" role="img" aria-label="Цены по датам вылета">${bars}</svg>
+  <div class="months">${months.join("")}</div>
+  <span class="cap">Столбик — самый дешёвый вариант с вылетом в этот день, цвет — условия сезона. Нажмите, чтобы подставить. Дешевле всего: ${short(parseD(cheap.depart))} – ${short(parseD(cheap.ret))}, ${fmt(cheap.price+bf)}; дороже всего ${fmt(hi+bf)}.</span></div>`;
+}
+/* История цены на выбранные даты: точки — проверки (ваши нажатия и ежедневная проверка сайта) */
 function histChart(H,k,bf){
   const [a,b]=k.split("|").map(parseD),dates=a&&b?`${short(a)}–${short(b)}`:"";
-  if(!H||H.length<2)return `<div class="hist"><span class="cap">История цены на ${dates} появится после следующих проверок: сайт записывает цены при каждом нажатии «Проверить цены» и сам раз в день.</span></div>`;
+  if(!H||!H.length)return "";
+  if(H.length<2){const day=new Date(H[0][0]).toLocaleDateString("ru-RU",{day:"numeric",month:"short"});
+    return `<div class="hist"><span class="lbl">История цены на ${dates}</span><span class="cap">Пока одна проверка: ${day} — ${fmt(H[0][1]+bf)}. Линия появится со следующей проверки — сайт сам проверяет цены каждое утро.</span></div>`}
   const P=H.map(([t,p])=>[t,p+bf]),t0=P[0][0],t1=P[P.length-1][0],ps=P.map(x=>x[1]),lo=Math.min(...ps),hi=Math.max(...ps);
   const X=t=>t1===t0?150:6+(t-t0)/(t1-t0)*288,Y=p=>hi===lo?35:8+(hi-p)/(hi-lo)*54;
   const pts=P.map(([t,p])=>`${X(t).toFixed(1)},${Y(p).toFixed(1)}`).join(" ");
@@ -838,7 +813,7 @@ function histChart(H,k,bf){
   <span class="cap">${day(t0)}: ${fmt(first)} → ${day(t1)}: <b>${fmt(last)}</b>${d?` (${d<0?"−":"+"}${fmt(Math.abs(d))})`:""} · минимум ${fmt(lo)} · проверок: ${P.length}</span></div>`;
 }
 $("fares").addEventListener("click",e=>{
-  const b=e.target.closest(".pick"),id=S.tab;if(!b||!PR[id])return;
+  const b=e.target.closest(".pick,.bar"),id=S.tab;if(!b||!PR[id])return;
   const p=PR[id].prices.find(x=>KEYP(x)===b.dataset.k);if(p){applyFare(id,p);PR[id].note="";persistPrices();persist();renderAll(true)}
 });
 function setTrip(id,p){

@@ -23,7 +23,7 @@ export default async function handler(req, res) {
   try {
     const h = await record({ [dest]: list });
     const d = h[dest] || {};
-    for (const p of list) { const k = p.depart + "|" + p.ret; if (d[k] && d[k].length > 1) history[k] = d[k]; }
+    for (const p of list) { const k = p.depart + "|" + p.ret; if (d[k] && d[k].length) history[k] = d[k]; }
   } catch {}
   res.status(200).json({ prices: list, history, fetchedAt: new Date().toISOString() });
 }
