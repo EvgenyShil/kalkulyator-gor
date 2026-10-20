@@ -1,6 +1,6 @@
 // Общие сохранённые расчёты в Vercel Blob: их видят все, кто открывает сайт.
 // GET    /api/saves          — список
-// POST   /api/saves          — сохранить { name, pp, airline, trip, state }
+// POST   /api/saves          — сохранить { name, summary, state } (весь расчёт по всем курортам)
 // DELETE /api/saves?id=...   — удалить
 import { put, list, del } from "@vercel/blob";
 
@@ -43,14 +43,15 @@ export default async function handler(req, res) {
       }
       const item = {
         name: String(body.name || "Без названия").slice(0, 80),
-        pp: Math.round(Number(body.pp) || 0),
-        airline: String(body.airline || "").slice(0, 20),
-        trip: String(body.trip || "").slice(0, 30),
+        summary: Array.isArray(body.summary) ? body.summary.slice(0, 8).map(x => ({
+          r: String(x && x.r || "").slice(0, 30),
+          pp: Math.round(Number(x && x.pp) || 0),
+        })) : [],
         state: body.state,
         at: Date.now(),
       };
       const json = JSON.stringify(item);
-      if (json.length > 20000) { res.status(413).json({ error: "Слишком большой расчёт" }); return; }
+      if (json.length > 100000) { res.status(413).json({ error: "Слишком большой расчёт" }); return; }
       const blob = await put(`${PREFIX}${item.at}.json`, json, {
         access: "public", contentType: "application/json", addRandomSuffix: true,
       });

@@ -1,52 +1,63 @@
-<title>Калькулятор Шерегеша</title>
+<!doctype html>
+<html lang="ru">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Калькулятор гор</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Manrope:wght@400;500;600;700&display=swap">
 <style>
-/* Layout: controls grouped by trip stage on the left, live ledger pinned on the right; stacks on phones */
+/* Layout: tabs per resort; controls on the left, live ledger pinned on the right; stacks on phones */
 :root{
   --bg:#eef2f5; --panel:#ffffff; --fg:#14212b; --muted:#5d6e7b; --line:#d6dee5;
   --accent:#1d5fa8; --accent-soft:#e2ecf7; --warn:#c2571a; --warn-soft:#fbeee4;
-  --green:#2e8b4e; --blue:#1d5fa8; --red:#c23a2b; --black:#14212b;
+  --green:#2e8b4e; --blue:#1d5fa8; --red:#c23a2b; --black:#14212b; --off:#cfd8df;
   --display:"Unbounded","Manrope",system-ui,sans-serif;
   --body:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#0f171e; --panel:#17222c; --fg:#e6edf2; --muted:#93a4b1; --line:#2a3946;
   --accent:#6aa8ea; --accent-soft:#1c2f42; --warn:#f0904f; --warn-soft:#3a2516;
-  --green:#5cc07e; --blue:#6aa8ea; --red:#ef6b5c; --black:#e6edf2; color-scheme:dark}}
+  --green:#5cc07e; --blue:#6aa8ea; --red:#ef6b5c; --black:#e6edf2; --off:#2f3d49; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0f171e; --panel:#17222c; --fg:#e6edf2; --muted:#93a4b1; --line:#2a3946;
   --accent:#6aa8ea; --accent-soft:#1c2f42; --warn:#f0904f; --warn-soft:#3a2516;
-  --green:#5cc07e; --blue:#6aa8ea; --red:#ef6b5c; --black:#e6edf2; color-scheme:dark}
+  --green:#5cc07e; --blue:#6aa8ea; --red:#ef6b5c; --black:#e6edf2; --off:#2f3d49; color-scheme:dark}
 *{box-sizing:border-box}
-body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.5;
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.5;margin:0;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 48px}
-.wrap{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:24px}
+.wrap{max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
 header h1{font-family:var(--display);font-weight:700;font-size:clamp(26px,4vw,38px);margin:0;letter-spacing:-.01em;text-wrap:balance}
 header p{margin:6px 0 0;color:var(--muted)}
-.grid{display:grid;grid-template-columns:minmax(0,1fr) 380px;gap:24px;align-items:start}
-@media (max-width:860px){.grid{grid-template-columns:minmax(0,1fr)}}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:10px}
+.tabs button{font:inherit;font-family:var(--display);font-weight:500;font-size:14px;border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:8px;padding:9px 14px;cursor:pointer;display:flex;flex-direction:column;align-items:flex-start;gap:0;line-height:1.25}
+.tabs button small{font-family:var(--body);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.tabs button.on{background:var(--accent);border-color:var(--accent);color:var(--panel)}
+.tabs button.on small{color:var(--panel);opacity:.85}
+.tabs .cmp{margin-left:auto}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 390px;gap:24px;align-items:start}
+@media (max-width:900px){.grid{grid-template-columns:minmax(0,1fr)}.tabs .cmp{margin-left:0}}
 .controls{display:flex;flex-direction:column;gap:16px;min-width:0}
 section.box{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px 18px 16px;display:flex;flex-direction:column;gap:14px;min-width:0}
 section.box h2{margin:0;font-family:var(--display);font-weight:500;font-size:15px;display:flex;align-items:center;gap:10px}
 .mark{width:12px;height:12px;border-radius:50%;flex:none}
 .mark.g{background:var(--green)} .mark.b{background:var(--blue)} .mark.r{background:var(--red)} .mark.k{background:var(--black);border-radius:2px;transform:rotate(45deg);width:10px;height:10px}
-.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
 label{display:flex;flex-direction:column;gap:5px;font-size:12.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
-input[type=number],input[type=date],select{font:inherit;font-size:15px;text-transform:none;letter-spacing:0;color:var(--fg);background:var(--bg);
+input[type=number],input[type=date],input[type=text],select{font:inherit;font-size:15px;text-transform:none;letter-spacing:0;color:var(--fg);background:var(--bg);
   border:1px solid var(--line);border-radius:7px;padding:9px 10px;width:100%;font-variant-numeric:tabular-nums;min-width:0}
 input:focus-visible,select:focus-visible,button:focus-visible,a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 .check{flex-direction:row;align-items:center;gap:8px;text-transform:none;letter-spacing:0;font-weight:500;font-size:14px;color:var(--fg)}
 .check input{width:18px;height:18px;accent-color:var(--accent);flex:none}
 .hint{font-size:13px;color:var(--muted);margin:0}
+.est{font-size:11px;font-weight:700;color:var(--warn);text-transform:none;letter-spacing:0}
 .seg{display:flex;flex-wrap:wrap;gap:8px}
 .seg button{font:inherit;font-size:14px;font-weight:600;border:1px solid var(--line);background:var(--bg);color:var(--fg);border-radius:20px;padding:7px 14px;cursor:pointer}
 .seg button.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
 aside{position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:20px;display:flex;flex-direction:column;gap:16px;min-width:0}
-@media (max-width:860px){aside{position:static}}
+@media (max-width:900px){aside{position:static}}
 .total{display:flex;flex-direction:column;gap:2px}
-.total .lbl{font-size:12.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.lbl{font-size:12.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
 .total .big{font-family:var(--display);font-weight:700;font-size:34px;font-variant-numeric:tabular-nums;line-height:1.15}
 .total .sub{color:var(--muted);font-variant-numeric:tabular-nums}
 table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:14px}
@@ -56,7 +67,16 @@ td{padding:8px 0;border-bottom:1px solid var(--line);text-align:right;vertical-a
 td:first-child{text-align:left;padding-right:8px;white-space:normal}
 td small{display:block;color:var(--muted);font-size:12px}
 tr.zero td{color:var(--muted)}
-.note{font-size:13px;color:var(--warn);margin:0}
+.warns{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.warns li{font-size:13px;border-radius:7px;padding:7px 10px;background:var(--warn-soft);color:var(--fg);border-left:3px solid var(--warn)}
+.warns li.info{background:var(--accent-soft);border-left-color:var(--accent)}
+.pay{display:flex;flex-direction:column;gap:8px}
+.pay .st{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;align-items:baseline}
+.pay .st b{font-size:14px}
+.pay .st .v{font-weight:700;font-variant-numeric:tabular-nums;text-align:right}
+.pay .st small{grid-column:1/-1;color:var(--muted);font-size:12px}
+.pay .bar{grid-column:1/-1;height:6px;border-radius:3px;background:var(--bg);overflow:hidden}
+.pay .bar i{display:block;height:100%;background:var(--accent)}
 .days{display:flex;gap:4px;flex-wrap:wrap}
 .day{flex:1 1 0;min-width:34px;text-align:center;font-size:11px;border-radius:5px;padding:6px 0;background:var(--bg);color:var(--muted);border:1px solid var(--line)}
 .day.lift{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
@@ -68,28 +88,19 @@ tr.zero td{color:var(--muted)}
 button.link{font:inherit;font-size:13px;background:none;border:none;color:var(--accent);cursor:pointer;padding:0;align-self:flex-start;text-decoration:underline}
 button.primary{font:inherit;font-weight:700;font-size:14px;background:var(--accent);color:var(--panel);border:none;border-radius:8px;padding:10px 16px;cursor:pointer;align-self:flex-start}
 button.primary:disabled{opacity:.6;cursor:progress}
-.badge{display:inline-block;font-size:12px;font-weight:700;color:var(--warn);background:var(--warn-soft);border-radius:5px;padding:2px 8px;text-transform:none;letter-spacing:0}
-.fares{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
-.fare{display:flex;flex-direction:column;gap:2px;text-decoration:none;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-variant-numeric:tabular-nums}
-.fare:hover{border-color:var(--accent)}
-.fare b{font-size:16px}
-.fare span{font-size:13px;color:var(--muted)}
-.fare.cur{border-color:var(--accent);background:var(--accent-soft)}
-.fare.best b{color:var(--green)}
 .status{font-size:13px;color:var(--muted);margin:0}
 .status.err{color:var(--warn)}
-.status a{color:var(--accent)}
 .seg .primary{align-self:center}
 .extlink{align-self:center;color:var(--accent);font-weight:600;font-size:14px;text-decoration:none;padding:8px 4px}
 .extlink:hover{text-decoration:underline}
-.pgroup{display:flex;flex-direction:column;gap:8px;margin-top:4px}
-.pgroup h3{margin:6px 0 0;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
-.ptable{max-height:340px;overflow:auto;border:1px solid var(--line);border-radius:8px}
+.ptable{max-height:360px;overflow:auto;border:1px solid var(--line);border-radius:8px}
 .ptable table{font-size:13.5px}
 .ptable th,.ptable td{padding:7px 10px}
-.ptable th{position:sticky;top:0;background:var(--panel);padding-top:8px}
-.ptable td:first-child,.ptable th:first-child{text-align:left}
+.ptable th{position:sticky;top:0;background:var(--panel);padding-top:8px;z-index:1}
 .ptable td.na{color:var(--muted)}
+.ptable td:first-child{white-space:nowrap}
+@media (max-width:520px){.ptable th,.ptable td{padding:6px 6px}.ptable td small,.pick small{font-size:10.5px}}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:-1px}
 .pick{font:inherit;display:flex;flex-direction:column;align-items:flex-end;gap:0;margin-left:auto;background:none;border:1px solid transparent;border-radius:6px;padding:3px 6px;cursor:pointer;color:var(--fg);font-variant-numeric:tabular-nums}
 .pick:hover{border-color:var(--accent)}
 .pick b{font-size:14px}
@@ -97,10 +108,21 @@ button.primary:disabled{opacity:.6;cursor:progress}
 .pick.on{background:var(--accent);border-color:var(--accent);color:var(--panel)}
 .pick.on small{color:var(--panel)}
 .ptable tr.mine td{background:var(--accent-soft)}
-.savebox{display:flex;flex-direction:column;gap:10px;border-top:1px solid var(--line);padding-top:14px}
-.savebox .lbl{font-size:12.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+/* Season strip */
+.sbar{position:relative;padding-top:4px;user-select:none}
+.sbar .name{font-size:12.5px;font-weight:700;margin-bottom:4px;display:flex;justify-content:space-between;gap:8px}
+.sbar .name span{font-weight:500;color:var(--muted);font-variant-numeric:tabular-nums}
+.strack{position:relative;height:26px;border-radius:6px;cursor:crosshair}
+.strack.light{height:10px;margin-top:3px;border-radius:4px}
+.swin{position:absolute;top:-4px;bottom:-4px;border:2px solid var(--fg);border-radius:6px;pointer-events:none;box-shadow:0 0 0 1px var(--panel)}
+.strip{position:absolute;top:3px;bottom:3px;border-radius:4px;background:var(--fg);border:2px solid var(--panel);pointer-events:none;min-width:6px}
+.months{position:relative;height:18px;font-size:11px;color:var(--muted)}
+.months span{position:absolute;top:2px;transform:translateX(2px);white-space:nowrap}
+.mtick{position:absolute;top:0;bottom:0;width:1px;background:var(--panel);opacity:.7;pointer-events:none}
+#tip{position:fixed;z-index:10;pointer-events:none;background:var(--fg);color:var(--panel);font-size:12.5px;border-radius:7px;padding:7px 10px;max-width:260px;line-height:1.4;box-shadow:0 4px 14px rgba(0,0,0,.2)}
+.savebox{display:flex;flex-direction:column;gap:10px}
 .saveform{display:flex;gap:8px}
-.saveform input{flex:1;min-width:0;font:inherit;font-size:14px;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:8px 10px}
+.saveform input{flex:1}
 .saveform .primary{padding:8px 14px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 .saved{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
@@ -110,66 +132,92 @@ button.primary:disabled{opacity:.6;cursor:progress}
 .saved .info span{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
 .saved button{font:inherit;font-size:13px;border:1px solid var(--line);background:var(--panel);color:var(--fg);border-radius:6px;padding:5px 9px;cursor:pointer}
 .saved button.del{color:var(--warn)}
+.ctable{overflow-x:auto}
+.ctable table{min-width:820px}
+.ctable td,.ctable th{padding:9px 8px}
+.ctable td:first-child{font-weight:700}
+.ctable td.tot,.ctable th:nth-child(2){text-align:left}
+.ctable tr.best td.tot{color:var(--green)}
+.ctable td.tot{font-family:var(--display);font-weight:700;font-size:15px}
+.ctable a{color:var(--accent);cursor:pointer;text-decoration:none}
+.ctable a:hover{text-decoration:underline}
+[hidden]{display:none!important}
 @media (prefers-reduced-motion: reduce){*{transition:none!important}}
 </style>
 
 <div class="wrap">
 <header>
-  <h1>Калькулятор Шерегеша</h1>
-  <p id="sub">Поездка 1–8 декабря. Меняйте любые поля, итог пересчитывается сразу.</p>
-  <input id="trip" type="hidden" value="2026-12-01|2026-12-08">
+  <h1 id="title">Калькулятор гор</h1>
+  <p id="sub">Шерегеш, Кировск, Сочи и Эльбрус. Меняйте любые поля, итог пересчитывается сразу.</p>
 </header>
 
-<div class="grid">
+<nav class="tabs" id="tabs" role="tablist" aria-label="Курорты"></nav>
+
+<div id="resortView" class="grid">
 <div class="controls">
+
+  <section class="box">
+    <h2><span class="mark g"></span>Даты и сезон</h2>
+    <label class="check" for="shareDates"><input id="shareDates" type="checkbox" checked>Общие даты для всех курортов</label>
+    <div class="row">
+      <label for="from">Могу ехать с
+        <input id="from" type="date" min="2026-11-01" max="2027-05-31">
+      </label>
+      <label for="to">по
+        <input id="to" type="date" min="2026-11-01" max="2027-05-31">
+      </label>
+      <label for="tmin">Поездка, дней от
+        <input id="tmin" type="number" min="3" max="21" value="7">
+      </label>
+      <label for="tmax">до
+        <input id="tmax" type="number" min="3" max="21" value="10">
+      </label>
+    </div>
+    <div id="season"></div>
+    <div class="legend"><span><i style="background:hsl(0,70%,48%)"></i>плохо</span><span><i style="background:hsl(55,75%,48%)"></i>средне</span><span><i style="background:hsl(120,55%,40%)"></i>лучшее время</span><span><i style="background:var(--off)"></i>не сезон</span><span><i style="border:2px solid var(--fg)"></i>ваше окно</span><span><i style="background:var(--fg)"></i>выбранный перелёт</span></div>
+    <p class="hint" id="seasonHint"></p>
+  </section>
 
   <section class="box">
     <h2><span class="mark g"></span>Состав</h2>
     <div class="row">
-      <label for="people">Сколько едет
-        <select id="people"><option>1</option><option selected>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select>
-      </label>
-      <label for="nights">Ночей в отеле
-        <input id="nights" type="number" min="1" max="30" value="7">
+      <label for="people">Сколько едет всего
+        <select id="people"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option></select>
       </label>
     </div>
+    <label class="check" for="wife"><input id="wife" type="checkbox">Еду с женой: плачу за двоих, у нас отдельный номер</label>
+    <p class="hint" id="peopleHint"></p>
   </section>
 
   <section class="box">
     <h2><span class="mark b"></span>Цены Aviasales</h2>
-    <p class="hint">Прямые рейсы Аэрофлота и S7, все варианты на 7–10 дней: с 20 ноября по 31 декабря и февраль. Туда-обратно на 1 человека. Крупно цена с багажом по вашим настройкам, мелко — тариф без багажа. Нажмите на цену, чтобы подставить её в расчёт.</p>
+    <p class="hint" id="pricesHint"></p>
     <div class="seg">
       <button type="button" class="primary" id="load">Проверить цены</button>
-      <a class="extlink" id="avsLink" href="https://www.aviasales.ru/search/MOW0112NOZ08121" target="_blank" rel="noopener">Открыть Aviasales ↗</a>
+      <a class="extlink" id="avsLink" href="https://www.aviasales.ru" target="_blank" rel="noopener">Открыть Aviasales ↗</a>
     </div>
     <p class="status" id="status" hidden></p>
     <div id="fares"></div>
   </section>
 
   <section class="box">
-    <h2><span class="mark b"></span>Перелёт Москва ⇄ Новокузнецк</h2>
-    <div class="seg" id="airline" role="group" aria-label="Авиакомпания">
-      <button type="button" data-v="su" class="on">Аэрофлот</button>
-      <button type="button" data-v="s7">S7</button>
-      <button type="button" data-v="own">Своя цена</button>
-    </div>
+    <h2><span class="mark b"></span><span id="flightTitle">Перелёт</span></h2>
+    <div class="seg" id="airline" role="group" aria-label="Авиакомпания"></div>
     <div class="row">
       <label for="base">Тариф без багажа, туда-обратно, ₽ / чел.
-        <input id="base" type="number" min="0" step="100" value="27317">
+        <input id="base" type="number" min="0" step="100">
       </label>
-      <label for="bag">Багаж и лыжи / сноуборд
-        <select id="bag"></select>
-      </label>
-      <label for="bagPrice">Доплата за багаж, туда-обратно, ₽
-        <input id="bagPrice" type="number" min="0" step="50" value="7650">
+      <label for="bagPrice">Доплата за багаж и лыжи, туда-обратно, ₽ <span class="est" id="bagEst"></span>
+        <input id="bagPrice" type="number" min="0" step="50">
       </label>
     </div>
+    <label class="check" for="bag"><input id="bag" type="checkbox" checked>Берём багаж и лыжи / сноуборд</label>
     <div class="row">
       <label for="xs">Место с доп. пространством для ног
-        <select id="xs"><option value="0" selected>не берём</option><option value="1">в одну сторону</option><option value="2">туда и обратно</option></select>
+        <select id="xs"><option value="0">не берём</option><option value="1">в одну сторону</option><option value="2">туда и обратно</option></select>
       </label>
       <label for="xsPrice">Цена места, ₽ за перелёт
-        <input id="xsPrice" type="number" min="0" step="50" value="3320">
+        <input id="xsPrice" type="number" min="0" step="50">
       </label>
     </div>
     <p class="hint" id="bagHint"></p>
@@ -178,285 +226,572 @@ button.primary:disabled{opacity:.6;cursor:progress}
   <section class="box">
     <h2><span class="mark g"></span>Жильё и трансфер</h2>
     <div class="row">
-      <label for="hotel">Отель за весь срок, ₽
-        <input id="hotel" type="number" min="0" step="500" value="38500">
+      <label for="hotelNight">Номер за ночь, ₽ <span class="est" id="hotelEst"></span>
+        <input id="hotelNight" type="number" min="0" step="100">
       </label>
-      <label for="hotelSplit">Делим отель на
-        <select id="hotelSplit"><option value="all" selected>всех едущих</option><option value="1">1 (платит один)</option></select>
+      <label for="nights">Ночей
+        <input id="nights" type="number" min="1" max="30">
+      </label>
+      <label for="room">Номер
+        <select id="room"><option value="all">делим на всех едущих</option><option value="one">плачу один</option></select>
+      </label>
+      <label for="prepay">Предоплата брони, %
+        <input id="prepay" type="number" min="0" max="100" step="10">
       </label>
     </div>
     <div class="row">
-      <label for="transfer">Трансфер в одну сторону, ₽ / чел.
-        <input id="transfer" type="number" min="0" step="100" value="2800">
+      <label for="transfer"><span id="transferLbl">Трансфер в одну сторону, ₽</span> <span class="est" id="transferEst"></span>
+        <input id="transfer" type="number" min="0" step="100">
+      </label>
+      <label for="transferMode">Цена трансфера
+        <select id="transferMode"><option value="person">с человека</option><option value="car">за машину (до 4 чел.)</option></select>
       </label>
       <label for="transferWays">Трансферов
-        <select id="transferWays"><option value="0">нет</option><option value="1">в одну сторону</option><option value="2" selected>туда и обратно</option></select>
+        <select id="transferWays"><option value="0">нет</option><option value="1">в одну сторону</option><option value="2">туда и обратно</option></select>
       </label>
     </div>
-    <p class="hint">Апартаменты, Весенняя 36В: 7 ночей на двоих за 38 500 ₽. Трансфер аэропорт Новокузнецка ⇄ Шерегеш.</p>
+    <p class="hint" id="hotelHint"></p>
   </section>
 
   <section class="box">
     <h2><span class="mark r"></span>Катание</h2>
     <div class="row">
       <label for="skiDays">Дней катания всего
-        <input id="skiDays" type="number" min="0" max="20" value="6">
+        <input id="skiDays" type="number" min="0" max="20">
       </label>
-      <label for="pass">Ски-пасс, ₽ / день
-        <input id="pass" type="number" min="0" step="100" value="3100">
+      <label for="pass">Ски-пасс, ₽ / день <span class="est" id="passEst"></span>
+        <input id="pass" type="number" min="0" step="100">
       </label>
     </div>
     <div class="row">
-      <label for="frDays">Фрирайд на ратраках, дней
-        <input id="frDays" type="number" min="0" max="20" value="2">
+      <label for="guideDays"><span id="guideLbl">Гид, дней</span>
+        <input id="guideDays" type="number" min="0" max="20">
       </label>
-      <label for="frType">Формат
-        <select id="frType"><option value="full" selected>полный день · 12 000</option><option value="half">полдня · 6 000</option></select>
+      <label for="guideType" id="guideTypeWrap">Формат
+        <select id="guideType"><option value="full">полный день · 12 000</option><option value="half">полдня · 6 000</option></select>
       </label>
-      <label for="frPrice">Цена дня, ₽ / чел.
-        <input id="frPrice" type="number" min="0" step="500" value="12000">
+      <label for="guidePrice">Цена дня, ₽ / чел. <span class="est" id="guideEst"></span>
+        <input id="guidePrice" type="number" min="0" step="500">
       </label>
     </div>
-    <label class="check" for="promo"><input id="promo" type="checkbox" checked>Акция «4-й день бесплатно» (каждый 4-й день фрирайда)</label>
-    <label class="check" for="halfPass"><input id="halfPass" type="checkbox" checked>В дни полудневного фрирайда тоже покупаем ски-пасс</label>
+    <label class="check" for="promo" id="promoWrap"><input id="promo" type="checkbox">Акция «4-й день бесплатно» (каждый 4-й день фрирайда)</label>
+    <label class="check" for="halfPass" id="halfPassWrap"><input id="halfPass" type="checkbox">В дни полудневного фрирайда тоже покупаем ски-пасс</label>
+    <div class="row">
+      <label for="rent">Аренда снаряжения, ₽ / день / чел.
+        <input id="rent" type="number" min="0" step="100" placeholder="не берём">
+      </label>
+      <label for="rentDays">Дней аренды
+        <input id="rentDays" type="number" min="0" max="20">
+      </label>
+    </div>
     <div class="days" id="days" aria-label="Раскладка дней катания"></div>
-    <div class="legend"><span><i style="background:var(--accent-soft);border:1px solid var(--accent)"></i>подъёмники</span><span><i style="background:var(--red)"></i>фрирайд</span><span><i style="background:linear-gradient(135deg,var(--red) 50%,var(--accent-soft) 50%)"></i>полдня фрирайда + подъёмники</span></div>
-    <p class="note" id="daysNote" hidden></p>
+    <div class="legend" id="daysLegend"></div>
   </section>
 
   <section class="box">
-    <h2><span class="mark k"></span>Такси, еда, прочее</h2>
+    <h2><span class="mark k"></span>Такси, еда, алкоголь</h2>
     <div class="row">
-      <label for="taxi">Такси, ₽ за поездку
-        <input id="taxi" type="number" min="0" step="50" value="300">
+      <label for="taxi">Такси до горы, ₽ за машину
+        <input id="taxi" type="number" min="0" step="50">
       </label>
-      <label for="taxiRides">Поездок в день
-        <input id="taxiRides" type="number" min="0" max="10" value="2">
-      </label>
-      <label for="taxiMode">Цена такси
-        <select id="taxiMode"><option value="car" selected>за машину, делим</option><option value="person">с каждого</option></select>
+      <label for="rides">Поездок в день
+        <input id="rides" type="number" min="0" max="10">
       </label>
     </div>
     <div class="row">
       <label for="food">Еда, ₽ / день / чел.
-        <input id="food" type="number" min="0" step="500" value="3000">
+        <input id="food" type="number" min="0" step="500">
       </label>
-      <label for="foodDays">Дней с едой
-        <input id="foodDays" type="number" min="0" max="30" value="7">
+      <label for="alco">Алкоголь, ₽ / день / чел.
+        <input id="alco" type="number" min="0" step="250">
+      </label>
+      <label for="foodDays">Дней
+        <input id="foodDays" type="number" min="0" max="30">
       </label>
       <label for="extra">Прочее, ₽ / чел.
-        <input id="extra" type="number" min="0" step="500" value="0">
+        <input id="extra" type="number" min="0" step="500">
       </label>
     </div>
+    <p class="hint" id="taxiHint">В такси 4 места: если вас больше четырёх, считаю две машины.</p>
   </section>
 
-  <button type="button" class="link" id="reset">Вернуть исходные значения</button>
+  <button type="button" class="link" id="reset">Вернуть исходные значения для этого курорта</button>
 </div>
 
 <aside aria-live="polite">
   <div class="total">
-    <span class="lbl">На одного</span>
+    <span class="lbl" id="totalLbl">На одного</span>
     <span class="big" id="perPerson">—</span>
     <span class="sub" id="tripLine">—</span>
   </div>
+  <ul class="warns" id="warns"></ul>
   <div style="overflow-x:auto">
   <table>
-    <thead><tr><th>Статья</th><th>На 1 чел.</th></tr></thead>
+    <thead><tr><th>Статья</th><th id="colLbl">На 1 чел.</th></tr></thead>
     <tbody id="ledger"></tbody>
   </table>
   </div>
-  <p class="hint">В день прилёта (16:25) и в день вылета (08:05) не катаемся, поэтому по умолчанию 6 дней катания.</p>
-  <div class="savebox">
-    <span class="lbl">Сохранённые расчёты</span>
-    <form id="saveForm" class="saveform">
-      <label for="saveName" class="sr">Название расчёта</label>
-      <input id="saveName" type="text" maxlength="60" placeholder="Например: Аэрофлот, 2 дня фрирайда">
-      <button type="submit" class="primary">Сохранить</button>
-    </form>
-    <ul id="savedList" class="saved"></ul>
-    <p class="hint" id="savedEmpty">Загружаю сохранённые расчёты…</p>
-    <p class="hint">Сохранения общие: их видит и может удалить любой, кто открывает этот сайт.</p>
+  <div class="pay">
+    <span class="lbl">Когда платить</span>
+    <div id="pay"></div>
   </div>
 </aside>
 </div>
+
+<div id="compareView" hidden>
+  <section class="box">
+    <h2><span class="mark k"></span>Итоги по курортам</h2>
+    <div class="seg">
+      <button type="button" class="primary" id="loadAll">Обновить цены по всем курортам</button>
+    </div>
+    <p class="status" id="statusAll" hidden></p>
+    <div class="ctable"><table>
+      <thead><tr><th>Курорт</th><th>Итог</th><th>Даты</th><th>Перелёт</th><th>Отель</th><th>Ски-пасс</th><th>Гид</th><th>Аренда</th><th>Еда и алкоголь</th><th>Трансфер и такси</th><th>Заплатить сейчас</th><th>На месте</th></tr></thead>
+      <tbody id="cmpBody"></tbody>
+    </table></div>
+    <p class="hint" id="cmpHint"></p>
+    <div id="cmpSeason" style="display:flex;flex-direction:column;gap:12px"></div>
+  </section>
 </div>
 
+<section class="box savebox">
+  <h2><span class="mark k"></span>Сохранённые расчёты</h2>
+  <form id="saveForm" class="saveform">
+    <label for="saveName" class="sr">Название расчёта</label>
+    <input id="saveName" type="text" maxlength="60" placeholder="Например: расчёт Жени">
+    <button type="submit" class="primary">Сохранить</button>
+  </form>
+  <p class="hint">Сохраняется весь расчёт целиком: все четыре курорта, даты и настройки. Сохранения общие: их видит и может удалить любой, кто открывает этот сайт.</p>
+  <ul id="savedList" class="saved"></ul>
+  <p class="hint" id="savedEmpty">Загружаю сохранённые расчёты…</p>
+</section>
+</div>
+<div id="tip" hidden></div>
 
 <script>
 const $=id=>document.getElementById(id);
-
-/* Тарифы авиакомпаний. Доплаты туда-обратно на 1 человека. */
-const AIR={
-  su:{name:"Аэрофлот",base:27317,xs:3320,bags:[
-    {v:"none",t:"без багажа",p:0},
-    {v:"fare",t:"Эконом Оптимум: багаж 23 кг (лыжи / сноуборд входят)",p:7650},
-  ],def:"fare",hint:"Аэрофлот: 1 место багажа до 23 кг, горнолыжное снаряжение идёт как это место."},
-  s7:{name:"S7",base:24554,xs:3300,bags:[
-    {v:"none",t:"без багажа",p:0},
-    {v:"fare",t:"Тариф Стандарт: багаж 23 кг, возврат, выбор места",p:11360},
-    {v:"sport",t:"Базовый + лыжи / сноуборд отдельно, 2 × 4 550",p:9100},
-  ],def:"fare",hint:"S7: Стандарт дороже инвентаря отдельно на 2 260 ₽, но даёт возврат (сбор 3 500), обмен дешевле (2 500 вместо 4 500) и выбор места на регистрации."},
-  own:{name:"Своя цена",base:34967,xs:3300,bags:[
-    {v:"none",t:"без доплат",p:0},
-    {v:"own",t:"своя доплата",p:0},
-  ],def:"none",hint:"Введите итоговую цену билета и при необходимости доплату."},
-};
-
-const ids=["trip","people","nights","airline","base","bag","bagPrice","xs","xsPrice","hotel","hotelSplit","transfer","transferWays","skiDays","pass","frDays","frType","frPrice","promo","halfPass","taxi","taxiRides","taxiMode","food","foodDays","extra"];
-const KEY="sheregesh-budget-v4", SAVED="sheregesh-saved-v1";
 const fmt=n=>Math.round(n).toLocaleString("ru-RU")+" ₽";
-const num=i=>Math.max(0,parseFloat($(i).value)||0);
+const fmtK=n=>n>=10000?Math.round(n/1000).toLocaleString("ru-RU")+" тыс.":fmt(n);
 const plural=(n,a,b,c)=>{n=Math.abs(n)%100;const m=n%10;if(n>10&&n<20)return c;if(m>1&&m<5)return b;if(m===1)return a;return c};
 const parseD=s=>{const [y,m,d]=(s||"").split("-").map(Number);return y?new Date(y,m-1,d):null};
+const iso=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;
 const short=d=>`${String(d.getDate()).padStart(2,"0")}.${String(d.getMonth()+1).padStart(2,"0")}`;
+const addD=(d,n)=>new Date(d.getFullYear(),d.getMonth(),d.getDate()+n);
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-
-let airline="su";
-let lastTotals={pp:0};
-let lastPrices=null;
 const MON=["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"];
-const tripDates=()=>{const [a,b]=($("trip").value||"").split("|");return [parseD(a),parseD(b)]};
+const MONS=["янв","фев","мар","апр","май","июн","июл","авг","сен","окт","ноя","дек"];
 
-function fillBag(code,keepValue){
-  const a=AIR[code],sel=$("bag"),prev=sel.value;
-  sel.innerHTML=a.bags.map(b=>`<option value="${b.v}">${b.t}</option>`).join("");
-  sel.value=keepValue&&a.bags.some(b=>b.v===prev)?prev:a.def;
-  $("bagHint").textContent=a.hint;
+/* Сезон 2026/27: шкала с 1 ноября по 31 мая */
+const S0=new Date(2026,10,1), S1=new Date(2027,4,31);
+const SPAN=Math.round((S1-S0)/864e5)+1;
+const dayIdx=d=>Math.round((d-S0)/864e5);
+const sd=mmdd=>{const [m,d]=mmdd.split("-").map(Number);return new Date(m>=8?2026:2027,m-1,d)};
+
+const AL={SU:"Аэрофлот",S7:"S7",DP:"Победа",U6:"Уральские",UT:"ЮТэйр",own:"Своя цена"};
+
+/* Курорты. Оценки сезона и цены, кроме Шерегеша, — примерные, их стоит уточнять. */
+const RES={
+  sheregesh:{where:"В Шерегеше",name:"Шерегеш",dest:"NOZ",airport:"Новокузнецк",lat:52.95,open:"11-15",close:"04-30",
+    snow:[["11-15",.3],["12-01",.55],["12-20",.7],["01-10",.7],["01-25",.72],["02-10",.9],["03-01",1],["03-25",.95],["04-08",.7],["04-20",.4],["04-30",.2]],
+    notes:{11:"Открытие, снега ещё мало",12:"Снег есть, холодно, день короткий",1:"Морозы до −30, снег хороший",2:"Глубокий снег, пухляк",3:"Лучшее время: снег и солнце",4:"Весна, к концу апреля снег сходит"},
+    airlines:["SU","S7"],bags:{SU:7650,S7:11360},bagsExact:true,xs:3320,
+    bagHint:"Аэрофлот, Эконом Оптимум: 1 место багажа до 23 кг, лыжи идут как это место. S7, Стандарт: багаж 23 кг, возврат, выбор места; инвентарь отдельно на Базовом — 2 × 4 550.",
+    transferLbl:"Трансфер Новокузнецк ⇄ Шерегеш, ₽",hotelHint:"Апартаменты, Весенняя 36В: 7 ночей на двоих за 38 500 ₽.",
+    guideLbl:"Фрирайд на ратраках, дней",guideNeedsPass:false,half:true,promo:true,
+    est:{},foodMin:2500,alcoMin:800,
+    def:{people:"2",wife:false,airline:"SU",base:27317,bag:true,bagPrice:7650,xs:"0",xsPrice:3320,hotelNight:5500,nights:7,room:"all",prepay:30,
+      transfer:2800,transferMode:"person",transferWays:"2",skiDays:6,pass:3100,guideDays:2,guideType:"full",guidePrice:12000,promo:true,halfPass:true,
+      rent:"",rentDays:6,taxi:300,rides:2,food:3000,alco:1000,foodDays:7,extra:0}},
+  kirovsk:{where:"В Кировске",name:"Кировск",dest:"KVK",airport:"Апатиты",lat:67.6,open:"11-25",close:"05-31",
+    snow:[["11-25",.35],["12-15",.6],["01-15",.72],["02-15",.88],["03-10",1],["04-20",1],["05-10",.75],["05-31",.4]],
+    notes:{11:"Открытие, почти всё время темно",12:"Полярная ночь: катание под фонарями",1:"Солнце возвращается в середине января, морозы",2:"Светлеет быстро, снег хороший",3:"Лучшее: снег и длинный день",4:"Отлично, весенний фрирайд",5:"Весна, сезон до конца мая"},
+    airlines:["SU"],bags:{SU:6500},xs:2500,
+    bagHint:"В Апатиты напрямую летает только Аэрофлот. Доплата за тариф с багажом примерная, проверьте на сайте.",
+    transferLbl:"Такси аэропорт Апатиты ⇄ Кировск, ₽",hotelHint:"Аэропорт Хибины в 30 минутах от Кировска. Цены отеля и гида примерные.",
+    guideLbl:"Гид, дней",guideNeedsPass:true,half:false,promo:false,
+    est:{hotel:1,pass:1,guide:1,transfer:1},foodMin:2000,alcoMin:700,
+    def:{people:"2",wife:false,airline:"SU",base:22000,bag:true,bagPrice:6500,xs:"0",xsPrice:2500,hotelNight:5000,nights:7,room:"all",prepay:30,
+      transfer:2000,transferMode:"car",transferWays:"2",skiDays:6,pass:3300,guideDays:0,guideType:"full",guidePrice:10000,promo:false,halfPass:true,
+      rent:"",rentDays:6,taxi:400,rides:2,food:2500,alco:1000,foodDays:7,extra:0}},
+  sochi:{where:"На Красной Поляне",name:"Сочи",dest:"AER",airport:"Сочи",lat:43.68,open:"12-10",close:"04-20",
+    snow:[["12-10",.3],["12-25",.55],["01-10",.75],["02-01",.9],["02-20",1],["03-10",.9],["03-31",.65],["04-12",.4],["04-20",.2]],
+    notes:{12:"Открытие, снег не гарантирован",1:"Снег стабильный, на праздники дорого",2:"Лучший снег",3:"Хорошо, к концу месяца весна",4:"Весна, внизу тает"},
+    airlines:["SU","DP","U6","UT"],bags:{SU:5800,DP:4000,U6:4400,UT:5000},xs:2500,
+    bagHint:"Доплаты за багаж и лыжи примерные: у Победы и ЮТэйр лыжи оформляются отдельно, у Аэрофлота — тариф с багажом.",
+    transferLbl:"Трансфер аэропорт ⇄ Красная Поляна, ₽",hotelHint:"Роза Хутор / Красная Поляна. До Поляны можно и на «Ласточке» (~300 ₽ с человека). Цены примерные.",
+    guideLbl:"Фрирайд с гидом, дней",guideNeedsPass:true,half:false,promo:false,
+    est:{hotel:1,pass:1,transfer:1},foodMin:3500,alcoMin:1000,
+    def:{people:"2",wife:false,airline:"SU",base:13000,bag:true,bagPrice:5800,xs:"0",xsPrice:2500,hotelNight:8000,nights:7,room:"all",prepay:30,
+      transfer:3500,transferMode:"car",transferWays:"2",skiDays:6,pass:4500,guideDays:2,guideType:"full",guidePrice:12000,promo:false,halfPass:true,
+      rent:"",rentDays:6,taxi:0,rides:0,food:4000,alco:1500,foodDays:7,extra:0}},
+  elbrus:{where:"На Эльбрусе",name:"Эльбрус",dest:"MRV",airport:"Минеральные Воды",lat:43.3,open:"12-01",close:"05-10",
+    snow:[["12-01",.35],["12-20",.6],["01-15",.72],["02-01",.85],["02-20",.95],["03-15",1],["04-01",.9],["04-20",.7],["05-10",.35]],
+    notes:{12:"Открытие, бывают сильные ветра",1:"Холодно и ветрено наверху",2:"Хорошо",3:"Лучшее время, много солнца",4:"Весна, наверху ещё отлично",5:"Конец сезона"},
+    airlines:["SU","DP","U6","UT"],bags:{SU:5800,DP:4000,U6:4400,UT:5000},xs:2500,
+    bagHint:"Ближайший аэропорт с прямыми рейсами из Москвы — Минводы, до Терскола около 3,5 часа. Доплаты за багаж примерные.",
+    transferLbl:"Трансфер Минводы ⇄ Терскол, ₽",hotelHint:"Терскол / Азау. Цены отеля, гида и трансфера примерные.",
+    guideLbl:"Гид, дней",guideNeedsPass:true,half:false,promo:false,
+    est:{hotel:1,pass:1,guide:1,transfer:1},foodMin:2000,alcoMin:700,
+    def:{people:"2",wife:false,airline:"SU",base:14000,bag:true,bagPrice:5800,xs:"0",xsPrice:2500,hotelNight:4500,nights:7,room:"all",prepay:30,
+      transfer:12000,transferMode:"car",transferWays:"2",skiDays:6,pass:3000,guideDays:2,guideType:"full",guidePrice:10000,promo:false,halfPass:true,
+      rent:"",rentDays:6,taxi:500,rides:2,food:2500,alco:1000,foodDays:7,extra:0}},
+};
+const IDS=Object.keys(RES);
+const FIELDS=Object.keys(RES.sheregesh.def).filter(k=>k!=="airline");
+const DATEF=["from","to","tmin","tmax"];
+const DEF_DATES={from:"2026-11-20",to:"2027-02-28",tmin:7,tmax:10,trip:"2026-12-01|2026-12-08"};
+
+/* Состояние: общие даты + у каждого курорта свои поля и свои даты (когда общие выключены) */
+const KEY="gory-state-v5", PKEY="gory-prices-v1";
+const clone=o=>JSON.parse(JSON.stringify(o));
+function fresh(){
+  const r={};IDS.forEach(id=>{r[id]={...clone(RES[id].def),fareFor:"",dates:clone(DEF_DATES)}});
+  return {v:5,tab:"sheregesh",shareDates:true,dates:clone(DEF_DATES),r};
 }
-function setAirline(code,fromUser){
-  airline=AIR[code]?code:"su";
-  document.querySelectorAll("#airline button").forEach(b=>b.classList.toggle("on",b.dataset.v===airline));
-  fillBag(airline,!fromUser);
-  if(fromUser){
-    const a=AIR[airline];$("base").value=a.base;$("xsPrice").value=a.xs;
-    const b=a.bags.find(x=>x.v===$("bag").value);$("bagPrice").value=b?b.p:0;
-  }
+/* Старый формат (только Шерегеш, v4) → новый */
+function migrate(s){
+  if(s&&s.v===5){const f=fresh();f.tab=s.tab||f.tab;f.shareDates=s.shareDates!==false;f.dates={...f.dates,...s.dates};
+    IDS.forEach(id=>{if(s.r&&s.r[id])f.r[id]={...f.r[id],...s.r[id],dates:{...f.r[id].dates,...(s.r[id].dates||{})}}});return f}
+  const f=fresh();if(!s)return f;
+  const r=f.r.sheregesh,n=parseFloat(s.nights)||7;
+  const map={people:"people",base:"base",bagPrice:"bagPrice",xs:"xs",xsPrice:"xsPrice",nights:"nights",transfer:"transfer",transferWays:"transferWays",skiDays:"skiDays",pass:"pass",frDays:"guideDays",frType:"guideType",frPrice:"guidePrice",promo:"promo",halfPass:"halfPass",taxi:"taxi",taxiRides:"rides",food:"food",foodDays:"foodDays",extra:"extra"};
+  for(const k in map)if(k in s)r[map[k]]=s[k];
+  if(s.airline)r.airline={su:"SU",s7:"S7",own:"own"}[s.airline]||"SU";
+  if("bag" in s)r.bag=s.bag!=="none";
+  if("hotel" in s)r.hotelNight=Math.round((parseFloat(s.hotel)||0)/n);
+  if(s.hotelSplit==="1")r.room="one";
+  if(s.trip){f.dates.trip=s.trip;r.fareFor=s.trip}
+  return f;
 }
+let S=fresh();
+try{const raw=localStorage.getItem(KEY);if(raw)S=migrate(JSON.parse(raw));else{const old=localStorage.getItem("sheregesh-budget-v4");if(old)S=migrate(JSON.parse(old))}}catch(e){}
+let PR={};try{PR=JSON.parse(localStorage.getItem(PKEY)||"{}")||{}}catch(e){}
+const persist=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const persistPrices=()=>{try{localStorage.setItem(PKEY,JSON.stringify(PR))}catch(e){}};
 
-function snapshot(){const s={};ids.forEach(i=>{if(i==="airline"){s[i]=airline;return}const el=$(i);s[i]=el.type==="checkbox"?el.checked:el.value});return s}
-function apply(s){setAirline(s.airline||"su",false);ids.forEach(i=>{if(!(i in s)||i==="airline")return;const el=$(i);if(el.type==="checkbox")el.checked=s[i];else el.value=s[i]});$("bagHint").textContent=AIR[airline].hint}
-function load(){try{const s=JSON.parse(localStorage.getItem(KEY)||"null");if(s)apply(s)}catch(e){}}
-function save(){try{localStorage.setItem(KEY,JSON.stringify(snapshot()))}catch(e){}}
+const DT=id=>S.shareDates?S.dates:S.r[id].dates;
+const tripOf=id=>{const [a,b]=(DT(id).trip||"").split("|");return [parseD(a),parseD(b)]};
+const nz=v=>Math.max(0,parseFloat(v)||0);
+const cur=()=>S.tab==="compare"?null:S.tab;
 
-function calc(){
-  const P=parseInt($("people").value,10)||1;
-  const nights=Math.round(num("nights"));
-  const ski=Math.round(num("skiDays"));
-  let fr=Math.round(num("frDays"));
-  const note=$("daysNote");
-  if(fr>ski){note.hidden=false;note.textContent=`Фрирайда ${fr} ${plural(fr,"день","дня","дней")}, а катания всего ${ski}. Считаю ${ski}.`;fr=ski}else note.hidden=true;
-  const half=$("frType").value==="half";
-  const frPaid=$("promo").checked?fr-Math.floor(fr/4):fr;
-  const frCost=frPaid*num("frPrice");
-  const liftDays=half?(ski-fr)+($("halfPass").checked?fr:0):(ski-fr);
-  const passCost=liftDays*num("pass");
-  const hotelPP=num("hotel")/($("hotelSplit").value==="all"?P:1);
-  const transferPP=num("transfer")*parseInt($("transferWays").value,10);
-  const taxiTotal=ski*num("taxiRides")*num("taxi");
-  const taxiPP=$("taxiMode").value==="car"?taxiTotal/P:taxiTotal;
-  const foodPP=num("food")*num("foodDays");
-  const extra=num("extra");
-  const bagOn=$("bag").value!=="none";
-  const bagPP=bagOn?num("bagPrice"):0;
-  const xsN=parseInt($("xs").value,10);
-  const xsPP=xsN*num("xsPrice");
-  const bagLabel=$("bag").selectedOptions[0]?.textContent||"";
-  const free=fr-frPaid;
+/* Условия сезона: снег (+ световой день для Кировска), 0 — плохо, 1 — лучшее время */
+function dayLen(lat,d){
+  const N=Math.round((d-new Date(d.getFullYear(),0,0))/864e5);
+  const dec=23.44*Math.PI/180*Math.sin(2*Math.PI*(284+N)/365), f=lat*Math.PI/180;
+  const c=(Math.sin(-0.833*Math.PI/180)-Math.sin(f)*Math.sin(dec))/(Math.cos(f)*Math.cos(dec));
+  return c>=1?0:c<=-1?24:2*Math.acos(c)*180/Math.PI/15;
+}
+function snowAt(id,d){
+  const R=RES[id];if(d<sd(R.open)||d>sd(R.close))return null;
+  const pts=R.snow.map(([m,v])=>[sd(m),v]);
+  if(d<=pts[0][0])return pts[0][1];
+  for(let i=1;i<pts.length;i++)if(d<=pts[i][0]){const [a,va]=pts[i-1],[b,vb]=pts[i];return va+(vb-va)*(d-a)/(b-a)}
+  return pts[pts.length-1][1];
+}
+function score(id,d){
+  const s=snowAt(id,d);if(s==null)return null;
+  if(id!=="kirovsk")return s;
+  return .55*s+.45*Math.min(1,dayLen(RES[id].lat,d)/10);
+}
+const col=s=>s==null?"var(--off)":`hsl(${Math.round(s*120)},${s>.5?55:70}%,${s>.5?40:48}%)`;
+const verdict=s=>s==null?"не сезон":s<.4?"плохо":s<.6?"так себе":s<.8?"хорошо":"лучшее время";
+function tripScore(id,a,b){let t=0,n=0;for(let d=a;d<=b;d=addD(d,1)){const s=score(id,d);t+=s==null?0:s;n++}return n?t/n:null}
+
+function seasonBar(id,opts={}){
+  const pct=d=>Math.max(0,Math.min(100,dayIdx(d)/SPAN*100));
+  const stops=[];for(let i=0;i<SPAN;i+=2){const d=addD(S0,i);stops.push(`${col(score(id,d))} ${(i/SPAN*100).toFixed(2)}%`,`${col(score(id,d))} ${((i+2)/SPAN*100).toFixed(2)}%`)}
+  const dt=DT(id),wa=parseD(dt.from),wb=parseD(dt.to),[ta,tb]=tripOf(id);
+  const ticks=[],labels=[];for(let m=0;m<7;m++){const d=new Date(2026,10+m,1);ticks.push(`<i class="mtick" style="left:${pct(d)}%"></i>`);labels.push(`<span style="left:${pct(d)}%">${MONS[d.getMonth()]}</span>`)}
+  let light="";
+  if(id==="kirovsk"){const ls=[];for(let i=0;i<SPAN;i+=3){const h=dayLen(RES[id].lat,addD(S0,i));const l=Math.round(8+h/24*80);ls.push(`hsl(48,${h<1?10:70}%,${l}%) ${(i/SPAN*100).toFixed(2)}%`)}
+    light=`<div class="strack light" data-r="${id}" data-light="1" style="background:linear-gradient(90deg,${ls.join(",")})" title="Световой день"></div>`}
+  const win=wa&&wb?`<div class="swin" style="left:${pct(wa)}%;width:${Math.max(.5,pct(wb)-pct(wa))}%"></div>`:"";
+  const trip=ta&&tb?`<div class="strip" style="left:${pct(ta)}%;width:${Math.max(1,pct(tb)-pct(ta))}%"></div>`:"";
+  const ts=ta&&tb?tripScore(id,ta,tb):null;
+  const head=opts.name?`<div class="name">${RES[id].name}<span>${ta&&tb?`${short(ta)}–${short(tb)} · ${verdict(ts)}`:""}</span></div>`:"";
+  return `<div class="sbar">${head}<div class="strack" data-r="${id}" style="background:linear-gradient(90deg,${stops.join(",")})">${ticks.join("")}${win}${trip}</div>${light}<div class="months">${labels.join("")}</div></div>`;
+}
+/* Подсказка при наведении на полоску сезона */
+const tip=$("tip");
+document.addEventListener("pointermove",e=>{
+  const t=e.target.closest(".strack");if(!t){tip.hidden=true;return}
+  const id=t.dataset.r,r=t.getBoundingClientRect(),i=Math.floor((e.clientX-r.left)/r.width*SPAN),d=addD(S0,Math.max(0,Math.min(SPAN-1,i)));
+  const s=score(id,d),h=dayLen(RES[id].lat,d),note=s==null?"":(RES[id].notes[d.getMonth()+1]||"");
+  tip.innerHTML=`<b>${d.getDate()} ${MON[d.getMonth()]}</b> · ${verdict(s)}${note?`<br>${note}`:""}<br>Световой день: ${h<.1?"полярная ночь":h.toFixed(1).replace(".",",")+" ч"}`;
+  tip.hidden=false;const x=Math.min(e.clientX+14,innerWidth-270);tip.style.left=x+"px";tip.style.top=(e.clientY+16)+"px";
+});
+document.addEventListener("pointerleave",()=>tip.hidden=true);
+
+/* Расчёт курорта: всё в рублях на меня (на меня и жену, если едем вдвоём) */
+const bagFee=(id,code)=>{const r=S.r[id];if(r.airline===code)return r.bag?nz(r.bagPrice):0;return RES[id].bags[code]||0};
+function calc(id){
+  const R=RES[id],r=S.r[id],[ta,tb]=tripOf(id);
+  const my=r.wife?2:1, N=Math.max(parseInt(r.people,10)||1,my), cars=Math.ceil(N/4);
+  const nights=Math.round(nz(r.nights)), ski=Math.round(nz(r.skiDays));
+  const gd=Math.min(Math.round(nz(r.guideDays)),ski), half=R.half&&r.guideType==="half";
+  const gPaid=R.promo&&r.promo?gd-Math.floor(gd/4):gd;
+  const passDays=R.guideNeedsPass?ski:half?(ski-gd)+(r.halfPass?gd:0):ski-gd;
+  const xsN=parseInt(r.xs,10)||0, ways=parseInt(r.transferWays,10)||0;
+  const hotelTotal=nz(r.hotelNight)*nights;
+  const hotel=r.wife||r.room==="one"?hotelTotal:hotelTotal/N;
+  const trOne=r.transferMode==="car"?nz(r.transfer)*cars/N*my:nz(r.transfer)*my;
+  const taxiAll=ski*nz(r.rides)*nz(r.taxi)*cars, taxi=taxiAll/N*my;
+  const x2=my>1?" × 2":"";
+  const v={
+    ticket:nz(r.base)*my, bag:r.bag?nz(r.bagPrice)*my:0, xs:xsN*nz(r.xsPrice)*my,
+    hotel, transfer:trOne*ways, pass:passDays*nz(r.pass)*my, guide:gPaid*nz(r.guidePrice)*my,
+    rent:nz(r.rent)*nz(r.rentDays)*my, taxi, food:nz(r.food)*nz(r.foodDays)*my, alco:nz(r.alco)*nz(r.foodDays)*my, extra:nz(r.extra)*my,
+  };
+  const airName=AL[r.airline]||r.airline;
   const rows=[
-    {n:`Билет, ${AIR[airline].name}`,d:"туда-обратно, без багажа",v:num("base")},
-    {n:"Багаж и инвентарь",d:bagOn?bagLabel:"не берём",v:bagPP},
-    {n:"Место с доп. пространством",d:xsN?`${xsN} × ${fmt(num("xsPrice"))}`:"",v:xsPP,hideZero:true},
-    {n:"Отель",d:`${nights} ${plural(nights,"ночь","ночи","ночей")}${$("hotelSplit").value==="all"&&P>1?`, ÷ ${P}`:""}`,v:hotelPP,g:num("hotel")},
-    {n:"Трансфер аэропорт ⇄ Шерегеш",d:transferPP?`${$("transferWays").value} × ${fmt(num("transfer"))}`:"",v:transferPP},
-    {n:"Ски-пасс",d:`${liftDays} ${plural(liftDays,"день","дня","дней")} × ${fmt(num("pass"))}`,v:passCost},
-    {n:"Фрирайд",d:fr?`${fr} ${plural(fr,"день","дня","дней")}${half?" по полдня":""}${free?`, ${free} бесплатно`:""}`:"",v:frCost},
-    {n:"Такси до горы",d:`${ski} дн. × ${num("taxiRides")} × ${fmt(num("taxi"))}${$("taxiMode").value==="car"&&P>1?`, ÷ ${P}`:""}`,v:taxiPP},
-    {n:"Еда",d:`${num("foodDays")} дн. × ${fmt(num("food"))}`,v:foodPP},
-  ];
-  if(extra) rows.push({n:"Прочее",d:"",v:extra});
-  const shown=rows.filter(r=>!(r.hideZero&&!r.v));
-  const pp=shown.reduce((s,r)=>s+r.v,0);
-  lastTotals={pp};
+    {n:`Билет, ${airName}`,d:`туда-обратно, без багажа${x2}`,v:v.ticket},
+    {n:"Багаж и инвентарь",d:r.bag?`туда-обратно${x2}`:"не берём",v:v.bag},
+    {n:"Место с доп. пространством",d:xsN?`${xsN} × ${fmt(nz(r.xsPrice))}${x2}`:"",v:v.xs,hideZero:true},
+    {n:"Отель",d:`${nights} ${plural(nights,"ночь","ночи","ночей")} × ${fmt(nz(r.hotelNight))}${r.wife?", отдельный номер":r.room==="all"&&N>1?`, ÷ ${N}`:""}`,v:v.hotel},
+    {n:"Трансфер",d:ways?`${ways} × ${fmt(nz(r.transfer))}${r.transferMode==="car"?` за машину${cars>1?` × ${cars}`:""}, ÷ ${N}${my>1?" × 2":""}`:x2}`:"",v:v.transfer,hideZero:true},
+    {n:"Ски-пасс",d:`${passDays} ${plural(passDays,"день","дня","дней")} × ${fmt(nz(r.pass))}${x2}`,v:v.pass},
+    {n:R.guideLbl.replace(", дней",""),d:gd?`${gd} ${plural(gd,"день","дня","дней")}${half?" по полдня":""}${gd-gPaid?`, ${gd-gPaid} бесплатно`:""}${x2}`:"",v:v.guide,hideZero:true},
+    {n:"Аренда снаряжения",d:v.rent?`${nz(r.rentDays)} дн. × ${fmt(nz(r.rent))}${x2}`:"",v:v.rent,hideZero:true},
+    {n:"Такси до горы",d:`${ski} дн. × ${nz(r.rides)} × ${fmt(nz(r.taxi))}${cars>1?` × ${cars} машины`:""}${N>1?`, ÷ ${N}`:""}${x2}`,v:v.taxi,hideZero:true},
+    {n:"Еда",d:`${nz(r.foodDays)} дн. × ${fmt(nz(r.food))}${x2}`,v:v.food},
+    {n:"Алкоголь",d:`${nz(r.foodDays)} дн. × ${fmt(nz(r.alco))}${x2}`,v:v.alco,hideZero:true},
+    {n:"Прочее",d:x2.trim(),v:v.extra,hideZero:true},
+  ].filter(x=>!(x.hideZero&&!x.v));
+  const total=rows.reduce((s,x)=>s+x.v,0);
 
-  const [ta,tb]=tripDates();
-  const tripTxt=ta&&tb?`${ta.getDate()}${ta.getMonth()===tb.getMonth()?"":" "+MON[ta.getMonth()]}–${tb.getDate()} ${MON[tb.getMonth()]}`:"";
-  $("sub").textContent=`${tripTxt?`Поездка ${tripTxt}, ${nights} ${plural(nights,"ночь","ночи","ночей")}. `:""}Меняйте любые поля, итог пересчитывается сразу.`;
-  $("tripLine").textContent=`${AIR[airline].name}${tripTxt?`, ${tripTxt}`:""}`;
-  $("perPerson").textContent=fmt(pp);
-  const dm=d=>`${String(d.getDate()).padStart(2,"0")}${String(d.getMonth()+1).padStart(2,"0")}`;
-  if(ta&&tb){$("avsLink").href=`https://www.aviasales.ru/search/MOW${dm(ta)}NOZ${dm(tb)}${P}`;$("avsLink").textContent=`Открыть Aviasales на ${short(ta)} – ${short(tb)} ↗`}
-  $("ledger").innerHTML=shown.map(r=>`<tr class="${r.v?"":"zero"}"><td>${r.n}${r.d?`<small>${r.d}</small>`:""}</td><td>${fmt(r.v)}</td></tr>`).join("");
+  /* Когда платить */
+  const pre=Math.min(100,nz(r.prepay))/100;
+  const now=v.ticket+v.bag+v.xs+v.hotel*pre;
+  const arrive=v.hotel*(1-pre)+(ways?trOne:0);
+  const site=v.pass+v.guide+v.rent+v.taxi+v.food+v.alco+v.extra;
+  const leave=ways>1?trOne:0;
+  const dd=Math.max(1,nights||1);
+  const pay=[
+    {t:"Сейчас: билеты и бронь отеля",d:`билеты ${fmt(v.ticket+v.bag+v.xs)}${pre?` + предоплата отеля ${Math.round(pre*100)}% ${fmt(v.hotel*pre)}`:""}`,v:now},
+    {t:`${ta?short(ta)+", ":""}заселение и трансфер`,d:`${pre<1?`остаток за отель ${fmt(v.hotel*(1-pre))}`:"отель уже оплачен"}${ways?`, трансфер ${fmt(trOne)}`:""}`,v:arrive},
+    {t:"На месте, каждый день",d:`ски-пасс, ${v.guide?"гид, ":""}${v.rent?"аренда, ":""}еда${v.alco?", алкоголь":""}${v.taxi?", такси":""}: в среднем ${fmt(site/dd)} в день`,v:site},
+    {t:`${tb?short(tb)+", ":""}отъезд`,d:"трансфер в аэропорт",v:leave},
+  ].filter(p=>p.v>0);
 
+  /* Предупреждения */
+  const W=[];
+  const food=nz(r.food),alco=nz(r.alco);
+  if(food<R.foodMin)W.push(`Мало на еду: ${fmt(food)} в день. ${R.where} обед на горе и ужин обычно от ${fmt(R.foodMin)} в день на человека.`);
+  if(alco>0&&alco<R.alcoMin)W.push(`На алкоголь ${fmt(alco)} в день — это примерно пара бокалов пива в баре. Нормально, если не планируете вечеринок.`);
+  if(!alco)W.push({i:1,t:"Алкоголь не заложен. Если планируете бар после катания, добавьте сумму в день."});
+  if(nz(r.guideDays)>ski)W.push(`Дней с гидом ${nz(r.guideDays)}, а катания всего ${ski}. Считаю ${ski}.`);
+  if(ski>nights)W.push(`Дней катания (${ski}) больше, чем ночей (${nights}).`);
+  if(nz(r.foodDays)<nights)W.push({i:1,t:`Еда посчитана на ${nz(r.foodDays)} дн., а ночей ${nights}.`});
+  if(!r.bag)W.push("Без багажа: лыжи или сноуборд не полетят, придётся брать аренду.");
+  if(ta&&tb){
+    if(ta<sd(R.open)||tb>sd(R.close))W.push(`Даты выходят за сезон: ${R.name} работает примерно с ${sd(R.open).getDate()} ${MON[sd(R.open).getMonth()]} по ${sd(R.close).getDate()} ${MON[sd(R.close).getMonth()]}.`);
+    const ts=tripScore(id,ta,tb);if(ts!=null&&ts<.5)W.push(`Условия в эти даты: ${verdict(ts)}. Посмотрите на полоску сезона, зелёные даты лучше.`);
+    if(id==="kirovsk"){const h=dayLen(R.lat,ta);if(h<4)W.push(`Полярная ночь: в эти даты светло ${h<.1?"всего пару часов сумерек":`около ${h.toFixed(1).replace(".",",")} ч`}. Катание в основном под фонарями.`)}
+    const ny1=new Date(2026,11,29),ny2=new Date(2027,0,9);if(ta<=ny2&&tb>=ny1)W.push({i:1,t:"Новогодние праздники: отель и ски-пасс обычно дороже, чем в расчёте."});
+    if(r.airline!=="own"&&r.fareFor!==DT(id).trip)W.push(`Цена билета не для выбранных дат. Нажмите «Проверить цены» или выберите вариант в таблице.`);
+  }
+  if(N>4)W.push({i:1,t:`Вас ${N}: в такси 4 места, считаю ${cars} машины.`});
+  if(R.est.hotel||R.est.pass)W.push({i:1,t:`Цены ${[R.est.hotel&&"отеля",R.est.pass&&"ски-пасса",R.est.guide&&"гида",R.est.transfer&&"трансфера"].filter(Boolean).join(", ")} примерные — поправьте, когда узнаете точные.`});
+  return {rows,total,v,pay,warns:W.map(w=>typeof w==="string"?{t:w}:w),my,N,ta,tb,airName,nights,ski,gd,half,passDays};
+}
+
+/* Отрисовка вкладок */
+function renderTabs(){
+  $("tabs").innerHTML=IDS.map(id=>{const c=calc(id);return `<button type="button" role="tab" data-t="${id}" class="${S.tab===id?"on":""}" aria-selected="${S.tab===id}">${RES[id].name}<small>${fmt(c.total)}</small></button>`}).join("")+
+    `<button type="button" role="tab" data-t="compare" class="cmp ${S.tab==="compare"?"on":""}" aria-selected="${S.tab==="compare"}">Сравнение<small>все курорты</small></button>`;
+}
+$("tabs").addEventListener("click",e=>{const b=e.target.closest("[data-t]");if(!b)return;S.tab=b.dataset.t;persist();history.replaceState(null,"","#"+S.tab);renderAll(true)});
+
+/* Форма ← состояние курорта */
+function fillForm(id){
+  const R=RES[id],r=S.r[id],dt=DT(id);
+  $("shareDates").checked=S.shareDates;
+  DATEF.forEach(k=>$(k).value=dt[k]);
+  FIELDS.forEach(k=>{const el=$(k);if(el.type==="checkbox")el.checked=!!r[k];else el.value=r[k]});
+  $("airline").innerHTML=[...R.airlines,"own"].map(c=>`<button type="button" data-v="${c}" class="${r.airline===c?"on":""}">${AL[c]}</button>`).join("");
+  $("flightTitle").textContent=`Перелёт Москва ⇄ ${R.airport}`;
+  $("transferLbl").textContent=R.transferLbl;
+  $("guideLbl").textContent=R.guideLbl;
+  $("guideTypeWrap").hidden=!R.half;$("promoWrap").hidden=!R.promo;$("halfPassWrap").hidden=!R.half;
+  $("bagHint").textContent=R.bagHint;$("hotelHint").textContent=R.hotelHint;
+  $("bagEst").textContent=R.bagsExact?"":"примерно";
+  $("hotelEst").textContent=R.est.hotel?"примерно":"";$("passEst").textContent=R.est.pass?"примерно":"";
+  $("guideEst").textContent=R.est.guide?"примерно":"";$("transferEst").textContent=R.est.transfer?"примерно":"";
+  $("room").disabled=!!r.wife;
+  $("pricesHint").textContent=`Прямые рейсы из Москвы в ${R.airport}: ${R.airlines.map(c=>AL[c]).join(", ")}. Ищу все варианты в вашем окне дат. Цена туда-обратно на 1 человека: крупно с багажом, мелко без багажа. Нажмите на цену, чтобы подставить её.`;
+}
+
+/* Состояние ← поле формы */
+function readField(k){
+  const el=$(k);const v=el.type==="checkbox"?el.checked:el.value;
+  if(DATEF.includes(k)){const dt=DT(S.tab);dt[k]=v;return}
+  S.r[S.tab][k]=v;
+}
+
+function renderResort(){
+  const id=S.tab,R=RES[id],r=S.r[id],c=calc(id),dt=DT(id);
+  $("title").textContent=`Калькулятор: ${R.name}`;
+  const tt=c.ta&&c.tb?`${c.ta.getDate()}${c.ta.getMonth()===c.tb.getMonth()?"":" "+MON[c.ta.getMonth()]}–${c.tb.getDate()} ${MON[c.tb.getMonth()]}`:"";
+  $("sub").textContent=`${tt?`Поездка ${tt}, ${c.nights} ${plural(c.nights,"ночь","ночи","ночей")}. `:""}Меняйте любые поля, итог пересчитывается сразу.`;
+  $("totalLbl").textContent=c.my>1?"Мои траты: я и жена":"На одного";
+  $("colLbl").textContent=c.my>1?"За двоих":"На 1 чел.";
+  $("perPerson").textContent=fmt(c.total);
+  $("tripLine").textContent=`${c.airName}${tt?`, ${tt}`:""}${c.my>1?` · на человека ${fmt(c.total/2)}`:""}`;
+  $("ledger").innerHTML=c.rows.map(x=>`<tr class="${x.v?"":"zero"}"><td>${x.n}${x.d?`<small>${x.d}</small>`:""}</td><td>${fmt(x.v)}</td></tr>`).join("")+`<tr><td><b>Итого</b></td><td><b>${fmt(c.total)}</b></td></tr>`;
+  $("warns").innerHTML=c.warns.map(w=>`<li class="${w.i?"info":""}">${esc(w.t)}</li>`).join("");
+  const mx=Math.max(...c.pay.map(p=>p.v),1);
+  $("pay").innerHTML=c.pay.map(p=>`<div class="st"><b>${p.t}</b><span class="v">${fmt(p.v)}</span><small>${p.d}</small><div class="bar"><i style="width:${p.v/mx*100}%"></i></div></div>`).join("");
+  $("peopleHint").textContent=c.my>1?`Едет ${c.N}, из них вы с женой. Билеты, ски-пасс, еда и прочее считаются за двоих, номер целиком ваш.`:`Отель${r.room==="all"?" и такси делятся":", такси делится"} на ${c.N}. В такси 4 места.`;
+  $("season").innerHTML=seasonBar(id);
+  const ts=c.ta&&c.tb?tripScore(id,c.ta,c.tb):null;
+  $("seasonHint").textContent=`Наведите на полоску, чтобы увидеть условия по датам. Оценки примерные: снег${id==="kirovsk"?" и световой день (нижняя полоска)":""}.${ts!=null?` Ваши даты: ${verdict(ts)}.`:""}${S.shareDates?" Даты общие для всех курортов.":""}`;
+  const P=c.N,dm=d=>`${String(d.getDate()).padStart(2,"0")}${String(d.getMonth()+1).padStart(2,"0")}`;
+  if(c.ta&&c.tb){$("avsLink").href=`https://www.aviasales.ru/search/MOW${dm(c.ta)}${R.dest}${dm(c.tb)}${P}`;$("avsLink").textContent=`Открыть Aviasales на ${short(c.ta)} – ${short(c.tb)} ↗`}
   let html="";
-  for(let i=0;i<ski;i++){const cls=i<fr?(half?"half":"fr"):"lift";
-    const lbl=ta?short(new Date(ta.getFullYear(),ta.getMonth(),ta.getDate()+1+i)):`день ${i+1}`;
-    html+=`<div class="day ${cls}">${lbl}</div>`}
+  for(let i=0;i<c.ski;i++){const cls=i<c.gd?(c.half?"half":"fr"):"lift";
+    const lbl=c.ta?short(addD(c.ta,1+i)):`день ${i+1}`;html+=`<div class="day ${cls}">${lbl}</div>`}
   $("days").innerHTML=html||'<span class="hint">Дней катания нет</span>';
+  $("daysLegend").innerHTML=`<span><i style="background:var(--accent-soft);border:1px solid var(--accent)"></i>подъёмники</span><span><i style="background:var(--red)"></i>${R.guideNeedsPass?"с гидом (ски-пасс тоже)":"фрирайд на ратраках"}</span>${R.half?`<span><i style="background:linear-gradient(135deg,var(--red) 50%,var(--accent-soft) 50%)"></i>полдня фрирайда + подъёмники</span>`:""}`;
+  renderPrices();
 }
 
-/* Цены Aviasales: /api/prices на Vercel отдаёт прямые рейсы SU и S7 по всем вариантам */
-const GROUPS=[{id:"dec",t:"Конец ноября – декабрь"},{id:"feb",t:"Февраль"}];
-const bagFee=code=>{if(airline===code)return $("bag").value==="none"?0:num("bagPrice");const a=AIR[code];return (a.bags.find(b=>b.v===a.def)||{p:0}).p};
-const withBag=(p,code)=>p[code]==null?null:p[code]+bagFee(code);
-const bestOf=p=>{const c=["su","s7"].filter(k=>p[k]!=null);if(!c.length)return null;return c.reduce((x,y)=>withBag(p,x)<=withBag(p,y)?x:y)};
-
-function applyFare(p,code){
-  setAirline(code,true);
-  $("base").value=p[code];
-  $("trip").value=`${p.depart}|${p.ret}`;
-  $("nights").value=p.days;
-  $("foodDays").value=p.days;
-  $("skiDays").value=Math.max(0,p.days-1);
-  update();renderPrices();
-}
+/* Цены Aviasales */
+const withBag=(id,p,code)=>p.fares[code]==null?null:p.fares[code]+bagFee(id,code);
+const bestOf=(id,p)=>{const cs=Object.keys(p.fares).filter(k=>p.fares[k]!=null);if(!cs.length)return null;return cs.reduce((x,y)=>withBag(id,p,x)<=withBag(id,p,y)?x:y)};
 function renderPrices(){
-  if(!lastPrices)return;
-  const box=$("fares"),cur=$("trip").value;
-  const cell=(p,code)=>{
-    if(p[code]==null)return `<td class="na">—</td>`;
-    const on=cur===`${p.depart}|${p.ret}`&&airline===code;
-    return `<td><button type="button" class="pick${on?" on":""}" data-k="${p.depart}|${p.ret}" data-a="${code}" title="Подставить в расчёт"><b>${fmt(withBag(p,code))}</b><small>без багажа ${fmt(p[code])}</small></button></td>`};
-  box.innerHTML=GROUPS.map(g=>{
-    const list=lastPrices.filter(p=>p.group===g.id&&bestOf(p)).sort((a,b)=>withBag(a,bestOf(a))-withBag(b,bestOf(b)));
-    if(!list.length)return "";
-    const b0=list[0],bc=bestOf(b0);
-    const rowsH=list.map(p=>`<tr class="${cur===`${p.depart}|${p.ret}`?"mine":""}"><td>${short(parseD(p.depart))} – ${short(parseD(p.ret))}</td><td>${p.days}</td>${cell(p,"su")}${cell(p,"s7")}</tr>`).join("");
-    return `<div class="pgroup"><h3>${g.t} · с багажом от ${fmt(withBag(b0,bc))} (${AIR[bc].name})</h3><div class="ptable"><table><thead><tr><th>Даты</th><th>Дней</th><th>Аэрофлот</th><th>S7</th></tr></thead><tbody>${rowsH}</tbody></table></div></div>`;
-  }).join("");
+  const id=S.tab,pr=PR[id],box=$("fares"),st=$("status");
+  if(!pr||!pr.prices){box.innerHTML="";st.hidden=true;return}
+  const k0=DT(id).trip,r=S.r[id];
+  const t=new Date(pr.fetchedAt);
+  st.hidden=false;st.className="status";
+  st.textContent=pr.prices.length?`${pr.prices.length} ${plural(pr.prices.length,"вариант","варианта","вариантов")} с ${short(parseD(pr.from))} по ${short(parseD(pr.to))}, ${pr.tmin}–${pr.tmax} дней. Обновлено ${t.toLocaleDateString("ru-RU",{day:"numeric",month:"short"})} в ${t.toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit",second:"2-digit"})}.${pr.note?" "+pr.note:""}`:"Aviasales не вернул прямых рейсов в этом окне дат.";
+  const al=pr.airlines||RES[id].airlines;
+  const list=pr.prices.filter(p=>bestOf(id,p)).sort((a,b)=>withBag(id,a,bestOf(id,a))-withBag(id,b,bestOf(id,b)));
+  if(!list.length){box.innerHTML="";return}
+  const cell=(p,code)=>{if(p.fares[code]==null)return `<td class="na">—</td>`;
+    const on=k0===`${p.depart}|${p.ret}`&&r.airline===code;
+    return `<td><button type="button" class="pick${on?" on":""}" data-k="${p.depart}|${p.ret}" data-a="${code}" title="Подставить в расчёт"><b>${fmt(withBag(id,p,code))}</b><small>без багажа ${fmt(p.fares[code])}</small></button></td>`};
+  const rowsH=list.map(p=>{const a=parseD(p.depart),b=parseD(p.ret),ts=tripScore(id,a,b);
+    return `<tr class="${k0===`${p.depart}|${p.ret}`?"mine":""}"><td><span class="dot" style="background:${col(ts)}" title="Условия: ${verdict(ts)}"></span>${short(a)} – ${short(b)}</td><td>${p.days}</td>${al.map(c=>cell(p,c)).join("")}</tr>`}).join("");
+  box.innerHTML=`<div class="ptable"><table><thead><tr><th>Даты</th><th>Дней</th>${al.map(c=>`<th>${AL[c]}</th>`).join("")}</tr></thead><tbody>${rowsH}</tbody></table></div><p class="hint" style="margin-top:6px">Кружок у дат — условия сезона в эти дни.</p>`;
 }
 $("fares").addEventListener("click",e=>{
-  const b=e.target.closest(".pick");if(!b||!lastPrices)return;
-  const p=lastPrices.find(x=>`${x.depart}|${x.ret}`===b.dataset.k);if(p)applyFare(p,b.dataset.a);
+  const b=e.target.closest(".pick"),id=S.tab;if(!b||!PR[id])return;
+  const p=PR[id].prices.find(x=>`${x.depart}|${x.ret}`===b.dataset.k);if(p){applyFare(id,p,b.dataset.a);PR[id].note="";persistPrices();persist();renderAll(true)}
 });
+function setTrip(id,p){
+  const r=S.r[id];
+  DT(id).trip=`${p.depart}|${p.ret}`;
+  r.nights=p.days;r.skiDays=Math.max(0,p.days-1);r.foodDays=p.days;r.rentDays=Math.max(0,p.days-1);
+}
+function applyFare(id,p,code){
+  const r=S.r[id];
+  if(r.airline!==code){r.airline=code;r.bagPrice=RES[id].bags[code]||0}
+  r.base=p.fares[code];setTrip(id,p);r.fareFor=`${p.depart}|${p.ret}`;
+  if(S.shareDates)IDS.filter(o=>o!==id).forEach(o=>syncTrip(o,p.days));
+}
+/* Общие даты поменялись: подтянуть у курорта цену билета на эти даты, если она есть */
+function syncTrip(id,days){
+  const r=S.r[id],k=S.dates.trip;
+  if(days){r.nights=days;r.skiDays=Math.max(0,days-1);r.foodDays=days;r.rentDays=Math.max(0,days-1)}
+  const p=PR[id]&&PR[id].prices&&PR[id].prices.find(x=>`${x.depart}|${x.ret}`===k);
+  if(p){const c=p.fares[r.airline]!=null?r.airline:bestOf(id,p);if(c){if(r.airline!==c){r.airline=c;r.bagPrice=RES[id].bags[c]||0}r.base=p.fares[c];r.fareFor=k}}
+}
+async function fetchPrices(id){
+  const dt=DT(id);
+  const qs=new URLSearchParams({dest:RES[id].dest,from:dt.from,to:dt.to,tmin:dt.tmin,tmax:dt.tmax,t:Date.now()});
+  const r=await fetch("/api/prices?"+qs,{cache:"no-store"});
+  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||("код "+r.status))}
+  const j=await r.json();
+  PR[id]={prices:(j.prices||[]).filter(p=>Object.keys(p.fares).length),airlines:j.airlines,fetchedAt:j.fetchedAt||new Date().toISOString(),from:dt.from,to:dt.to,tmin:dt.tmin,tmax:dt.tmax};
+  persistPrices();
+  /* Есть цена на выбранные даты — обновляем её, нет — берём самый дешёвый вариант с багажом */
+  const k=DT(id).trip,list=PR[id].prices,same=list.find(p=>`${p.depart}|${p.ret}`===k);
+  if(same){const c=same.fares[S.r[id].airline]!=null?S.r[id].airline:bestOf(id,same);applyFare(id,same,c);PR[id].note=`Цена на ваши даты ${short(parseD(same.depart))}–${short(parseD(same.ret))} обновлена.`}
+  else if(list.length&&!(S.shareDates&&id!==S.tab)){let best=null,bc=null;for(const p of list){const c=bestOf(id,p);if(c&&(!best||withBag(id,p,c)<withBag(id,best,bc))){best=p;bc=c}}
+    applyFare(id,best,bc);PR[id].note=`На ваши даты прямых рейсов нет, подставлен самый дешёвый с багажом: ${AL[bc]}, ${short(parseD(best.depart))}–${short(parseD(best.ret))}.`}
+  else PR[id].note=list.length?"На общие даты прямых рейсов нет — выберите вариант в таблице этого курорта.":"";
+  persistPrices();
+}
 async function loadPrices(){
-  const st=$("status"),btn=$("load");
+  const id=S.tab,st=$("status"),btn=$("load");
   btn.disabled=true;btn.textContent="Загружаю…";st.hidden=false;st.className="status";st.textContent="Запрашиваю цены у Aviasales…";
-  try{
-    const r=await fetch("/api/prices?t="+Date.now(),{cache:"no-store"});
-    if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||("код "+r.status))}
-    const j=await r.json();
-    lastPrices=(j.prices||[]).filter(p=>p.su!=null||p.s7!=null);
-    if(!lastPrices.length){st.className="status err";st.textContent="Aviasales не вернул цен. Попробуйте позже.";$("fares").innerHTML="";return}
-    let best=null,bc=null;
-    for(const p of lastPrices){const c=bestOf(p);if(c&&(!best||withBag(p,c)<withBag(best,bc))){best=p;bc=c}}
-    const t=new Date(j.fetchedAt||Date.now());
-    st.innerHTML=`${lastPrices.length} ${plural(lastPrices.length,"вариант","варианта","вариантов")}, только прямые рейсы. Самый дешёвый с багажом подставлен в расчёт: <b>${AIR[bc].name}, ${short(parseD(best.depart))} – ${short(parseD(best.ret))}, ${best.days} ${plural(best.days,"день","дня","дней")}</b>. Запрос к Aviasales в ${t.toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit",second:"2-digit"})}.`;
-    applyFare(best,bc);
-  }catch(e){
-    st.className="status err";
-    st.textContent=`Не удалось получить цены (${e.message}). Цены подгружаются только на сайте, опубликованном на Vercel.`;
-    $("fares").innerHTML="";
-  }finally{btn.disabled=false;btn.textContent="Проверить цены"}
+  try{await fetchPrices(id);persist();renderAll(true)}
+  catch(e){st.className="status err";st.textContent=`Не удалось получить цены (${e.message}). Цены подгружаются только на сайте, опубликованном на Vercel.`}
+  finally{btn.disabled=false;btn.textContent="Проверить цены"}
+}
+async function loadAll(){
+  const st=$("statusAll"),btn=$("loadAll");btn.disabled=true;st.hidden=false;st.className="status";
+  const errs=[];
+  for(const id of IDS){btn.textContent=`Загружаю: ${RES[id].name}…`;try{await fetchPrices(id)}catch(e){errs.push(`${RES[id].name}: ${e.message}`)}}
+  persist();renderAll(false);
+  st.className=errs.length?"status err":"status";
+  st.textContent=errs.length?`Не всё получилось: ${errs.join("; ")}`:`Цены обновлены в ${new Date().toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"})}.`;
+  btn.disabled=false;btn.textContent="Обновить цены по всем курортам";
 }
 
-/* Сохранённые расчёты (в этом браузере) */
+/* Сравнение */
+function renderCompare(){
+  $("title").textContent="Сравнение курортов";
+  $("sub").textContent=S.shareDates?"Даты общие для всех курортов. Нажмите на курорт, чтобы открыть его расчёт.":"У каждого курорта свои даты. Нажмите на курорт, чтобы открыть его расчёт.";
+  const cs=IDS.map(id=>({id,c:calc(id)}));
+  const min=Math.min(...cs.map(x=>x.c.total));
+  $("cmpBody").innerHTML=cs.map(({id,c})=>{const v=c.v,now=c.pay[0]?c.pay[0].v:0;const site=c.total-now;
+    const ts=c.ta&&c.tb?tripScore(id,c.ta,c.tb):null;
+    return `<tr class="${c.total===min?"best":""}"><td><a data-t="${id}">${RES[id].name}</a>${c.my>1?"<small>с женой</small>":""}</td>
+    <td class="tot">${fmt(c.total)}${c.warns.filter(w=>!w.i).length?`<small>⚠ ${c.warns.filter(w=>!w.i).length}</small>`:""}</td>
+    <td>${c.ta&&c.tb?`<span class="dot" style="background:${col(ts)}"></span>${short(c.ta)}–${short(c.tb)}<small>${verdict(ts)}</small>`:"—"}</td>
+    <td>${fmt(v.ticket+v.bag+v.xs)}<small>${c.airName}</small></td><td>${fmt(v.hotel)}</td><td>${fmt(v.pass)}</td><td>${fmt(v.guide)}</td><td>${fmt(v.rent)}</td>
+    <td>${fmt(v.food+v.alco)}</td><td>${fmt(v.transfer+v.taxi)}</td><td>${fmt(now)}</td><td>${fmt(site)}</td></tr>`}).join("");
+  $("cmpHint").textContent="Суммы на одного (или на вас с женой, если стоит галка). «Заплатить сейчас» — билеты и предоплата отеля. ⚠ — есть предупреждения, они видны во вкладке курорта.";
+  $("cmpSeason").innerHTML=`<span class="lbl">Сезон и выбранные даты</span>`+IDS.map(id=>seasonBar(id,{name:1})).join("");
+}
+$("cmpBody").addEventListener("click",e=>{const a=e.target.closest("[data-t]");if(!a)return;S.tab=a.dataset.t;persist();history.replaceState(null,"","#"+S.tab);renderAll(true)});
+
+function renderAll(refill){
+  const cmp=S.tab==="compare";
+  $("resortView").hidden=cmp;$("compareView").hidden=!cmp;
+  renderTabs();
+  if(cmp){renderCompare();return}
+  if(refill)fillForm(S.tab);
+  renderResort();
+}
+
+/* События формы */
+function onInput(k){
+  const id=S.tab;if(id==="compare")return;
+  readField(k);
+  const r=S.r[id];
+  if(k==="guideType"){r.guidePrice=r.guideType==="half"?6000:12000;$("guidePrice").value=r.guidePrice}
+  if(k==="wife"){if(r.wife&&(parseInt(r.people,10)||1)<2){r.people="2";$("people").value="2"}$("room").disabled=!!r.wife}
+  if(DATEF.includes(k)&&k!=="trip"){/* окно дат меняет только поиск; выбранный перелёт остаётся */}
+  persist();renderTabs();renderResort();
+}
+[...FIELDS,...DATEF].forEach(k=>{const el=$(k);el.addEventListener("input",()=>onInput(k));el.addEventListener("change",()=>onInput(k))});
+$("shareDates").addEventListener("change",()=>{
+  const id=S.tab,on=$("shareDates").checked;
+  if(on){S.dates=clone(S.r[id].dates);S.shareDates=true;IDS.forEach(o=>{if(o!==id)syncTrip(o,(()=>{const [a,b]=S.dates.trip.split("|").map(parseD);return a&&b?Math.round((b-a)/864e5):0})())})}
+  else{IDS.forEach(o=>S.r[o].dates=clone(S.dates));S.shareDates=false}
+  persist();renderAll(true);
+});
+$("airline").addEventListener("click",e=>{
+  const b=e.target.closest("[data-v]");if(!b)return;const id=S.tab,r=S.r[id],c=b.dataset.v;
+  r.airline=c;r.bagPrice=c==="own"?0:(RES[id].bags[c]||0);
+  const k=DT(id).trip,p=PR[id]&&PR[id].prices&&PR[id].prices.find(x=>`${x.depart}|${x.ret}`===k);
+  if(c!=="own"&&p&&p.fares[c]!=null){r.base=p.fares[c];r.fareFor=k}
+  persist();renderAll(true);
+});
+$("load").addEventListener("click",loadPrices);
+$("loadAll").addEventListener("click",loadAll);
+$("reset").addEventListener("click",()=>{const id=S.tab;S.r[id]={...clone(RES[id].def),fareFor:"",dates:S.r[id].dates};persist();renderAll(true)});
+
+/* Сохранённые расчёты (общие, в Vercel Blob) */
 let savedItems=[];
 async function loadSaved(){
   try{
     const r=await fetch("/api/saves",{cache:"no-store"});
     if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||("код "+r.status))}
-    savedItems=(await r.json()).items||[];
-    renderSaved();
+    savedItems=(await r.json()).items||[];renderSaved();
   }catch(e){$("savedList").innerHTML="";$("savedEmpty").hidden=false;$("savedEmpty").textContent=`Не удалось загрузить сохранения (${e.message}). Общие сохранения работают только на сайте на Vercel.`}
 }
 function renderSaved(){
@@ -464,15 +799,15 @@ function renderSaved(){
   if(!savedItems.length)$("savedEmpty").textContent="Пока ничего не сохранено.";
   $("savedList").innerHTML=savedItems.map((s,i)=>{
     const d=new Date(s.at);
-    const meta=[`${fmt(s.pp)} / чел.`,s.airline,s.trip,d.toLocaleDateString("ru-RU",{day:"numeric",month:"short"})].filter(Boolean).join(" · ");
+    const parts=s.summary&&s.summary.length?s.summary.map(x=>`${x.r} ${fmtK(x.pp)}`):[`Шерегеш ${fmtK(s.pp||0)}`,s.airline,s.trip].filter(Boolean);
+    const meta=[...parts,d.toLocaleDateString("ru-RU",{day:"numeric",month:"short"})].join(" · ");
     return `<li><div class="info"><b title="${esc(s.name)}">${esc(s.name)}</b><span>${esc(meta)}</span></div><button type="button" data-open="${i}">Открыть</button><button type="button" class="del" data-del="${i}" aria-label="Удалить">✕</button></li>`}).join("");
 }
 $("saveForm").addEventListener("submit",async e=>{
   e.preventDefault();
-  calc();
   const btn=$("saveForm").querySelector("button");btn.disabled=true;btn.textContent="Сохраняю…";
-  const [ta,tb]=tripDates();
-  const body={name:$("saveName").value.trim()||`${AIR[airline].name}, ${fmt(lastTotals.pp)}`,pp:Math.round(lastTotals.pp),airline:AIR[airline].name,trip:ta&&tb?`${short(ta)}–${short(tb)}`:"",state:snapshot()};
+  const summary=IDS.map(id=>({r:RES[id].name,pp:Math.round(calc(id).total)}));
+  const body={name:$("saveName").value.trim()||`Расчёт от ${new Date().toLocaleDateString("ru-RU",{day:"numeric",month:"short"})}`,summary,state:S};
   try{
     const r=await fetch("/api/saves",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(body)});
     if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||("код "+r.status))}
@@ -482,22 +817,14 @@ $("saveForm").addEventListener("submit",async e=>{
 });
 $("savedList").addEventListener("click",async e=>{
   const o=e.target.closest("[data-open]"),d=e.target.closest("[data-del]");
-  if(o){const s=savedItems[+o.dataset.open];if(s){apply(s.state);update();window.scrollTo({top:0,behavior:"smooth"})}}
+  if(o){const s=savedItems[+o.dataset.open];if(s){const tab=S.tab;S=migrate(s.state);if(s.state&&s.state.v!==5)S.tab="sheregesh";else S.tab=tab;persist();renderAll(true);window.scrollTo({top:0,behavior:"smooth"})}}
   if(d){const s=savedItems[+d.dataset.del];if(!s)return;d.disabled=true;
     try{await fetch("/api/saves?id="+encodeURIComponent(s.id),{method:"DELETE"})}catch(err){}
     await loadSaved()}
 });
 
-/* События */
-document.querySelectorAll("#airline button").forEach(b=>b.addEventListener("click",()=>{setAirline(b.dataset.v,true);update()}));
-$("bag").addEventListener("change",()=>{const b=AIR[airline].bags.find(x=>x.v===$("bag").value);if(b&&b.v!=="own")$("bagPrice").value=b.p;update()});
-$("frType").addEventListener("change",()=>{$("frPrice").value=$("frType").value==="half"?6000:12000;update()});
-$("load").addEventListener("click",loadPrices);
-function update(){calc();save();renderPrices()}
-ids.forEach(i=>{if(i==="airline")return;$(i).addEventListener("input",update);$(i).addEventListener("change",update)});
-
-setAirline("su",false);
-const defaults=snapshot();
-$("reset").addEventListener("click",()=>{apply(defaults);update()});
-load();update();loadSaved();
+/* Старт */
+const h=location.hash.slice(1);if(h&&(RES[h]||h==="compare"))S.tab=h;
+if(!RES[S.tab]&&S.tab!=="compare")S.tab="sheregesh";
+renderAll(true);loadSaved();
 </script>
