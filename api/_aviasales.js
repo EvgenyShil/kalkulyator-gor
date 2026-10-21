@@ -4,8 +4,8 @@
 // лента не отдаёт, а часть рейсов (например, S7 в Сочи) в ней не бывает вовсе.
 import { FILES, update } from "./_store.js";
 
-// Новокузнецк, Апатиты, Сочи, Минводы, Абакан, Южно-Сахалинск, Петропавловск-Камчатский, Саппоро, Токио
-export const DESTS = ["NOZ", "KVK", "AER", "MRV", "ABA", "UUS", "PKC", "SPK", "TYO"];
+// Новокузнецк, Апатиты, Сочи, Минводы, Горно-Алтайск, Абакан, Южно-Сахалинск, Петропавловск-Камчатский, Саппоро, Токио
+export const DESTS = ["NOZ", "KVK", "AER", "MRV", "RGK", "ABA", "UUS", "PKC", "SPK", "TYO"];
 /* В Японию прямых рейсов из Москвы нет — там ищем с любыми пересадками */
 const ANY_TRANSFERS = ["SPK", "TYO"];
 
@@ -49,7 +49,7 @@ export async function exact(dest, depart, ret) {
 }
 
 /* Поездки сохранённого расчёта: по каждому курорту его даты */
-export const RESORT_DEST = { sheregesh: "NOZ", kirovsk: "KVK", sochi: "AER", elbrus: "MRV", priiskovy: "ABA", sakhalin: "UUS", kamchatka: "PKC", niseko: "SPK", hakuba: "TYO" };
+export const RESORT_DEST = { sheregesh: "NOZ", kirovsk: "KVK", sochi: "AER", elbrus: "MRV", manzherok: "RGK", priiskovy: "ABA", sakhalin: "UUS", kamchatka: "PKC", niseko: "SPK", hakuba: "TYO" };
 export function tripsOf(state) {
   if (!state || typeof state !== "object") return [];
   const ok = k => /^\d{4}-\d{2}-\d{2}\|\d{4}-\d{2}-\d{2}$/.test(k || "");

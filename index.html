@@ -173,7 +173,7 @@ button.primary:disabled{opacity:.6;cursor:progress}
 <div class="wrap">
 <header>
   <h1 id="title">Калькулятор гор</h1>
-  <p id="sub">Шерегеш, Кировск, Сочи, Эльбрус, Приисковый, Сахалин, Камчатка и Япония. Меняйте любые поля, итог пересчитывается сразу.</p>
+  <p id="sub">Шерегеш, Кировск, Сочи, Эльбрус, Манжерок, Приисковый, Сахалин, Камчатка и Япония. Меняйте любые поля, итог пересчитывается сразу.</p>
   <p class="defaults" id="defaults">По умолчанию уже подставлены средние цены на курорте: ски-пассы, отель, трансфер, гид, такси, еда. Если знаете точные — просто впишите свои.</p>
 </header>
 
@@ -521,6 +521,19 @@ const RES={
     def:{people:"2",wife:false,base:22679,bag:true,xs:"0",xsPrice:2500,hotelNight:31500,hotelMode:"total",hotelNights:7,nights:7,room:"all",prepay:30,
       transfer:12000,transferMode:"car",transferWays:"2",skiDays:6,passType:"pre",passOwn:"",guideDays:2,guideType:"full",guidePrice:10000,promo:false,halfPass:true,
       rent:"",rentDays:6,taxi:500,rides:2,food:2500,alco:1000,foodDays:7,extra:0,ins:2000,reserve:10}},
+  manzherok:{where:"В Манжероке",name:"Манжерок",dest:"RGK",airport:"Горно-Алтайск",lat:51.8,open:"12-10",close:"04-10",
+    snow:[["12-10",.35],["12-28",.6],["01-20",.8],["02-15",.95],["03-10",1],["03-31",.7],["04-10",.4]],
+    notes:{12:"Открытие, катание в основном на искусственном снегу",1:"Сильные морозы, до −25",2:"Хороший снег, теплеет",3:"Лучшее время: снег и солнце",4:"Весна, конец сезона"},
+    bag:8000,
+    bagHint:"С багажом = ориентир + 8 000 ₽ (примерно: у Аэрофлота тариф с багажом дешевле, у S7 дороже). В Горно-Алтайск напрямую летают Аэрофлот и S7, аэропорт в 30 км от курорта.",
+    passSrc:["altapress.ru","https://altapress.ru/story/otdih-na-altae-v-godu-tseni-na-kurorte-manzherok-388509"],passSeason:"2026",
+    passes:[{id:"day",n:"Манжерок, дневной",t:{low:{1:2500}}}],
+    transferLbl:"Такси аэропорт Горно-Алтайск ⇄ Манжерок, ₽",hotelHint:"Номера от 4 800 ₽ за ночь, при покупке ски-пасса в отеле курорта скидка 30%. Цены отеля, трансфера и гида примерные.",
+    guideLbl:"Гид, дней",guideNeedsPass:true,half:false,promo:false,
+    est:{hotel:1,guide:1,transfer:1},foodMin:2500,alcoMin:700,
+    def:{people:"2",wife:false,base:30000,bag:true,xs:"0",xsPrice:2500,hotelNight:49000,hotelMode:"total",hotelNights:7,nights:7,room:"all",prepay:30,
+      transfer:2000,transferMode:"car",transferWays:"2",skiDays:6,passType:"day",passOwn:"",guideDays:0,guideType:"full",guidePrice:8000,promo:false,halfPass:true,
+      rent:"",rentDays:6,taxi:0,rides:0,food:3000,alco:1000,foodDays:7,extra:0,ins:2000,reserve:10}},
   priiskovy:{where:"В Приисковом",name:"Приисковый",dest:"ABA",airport:"Абакан",lat:54.6,open:"11-25",close:"04-20",
     snow:[["11-25",.4],["12-20",.7],["01-20",.9],["02-15",1],["03-15",.95],["04-05",.6],["04-20",.35]],
     notes:{11:"Начало сезона, снега ещё мало",12:"Снег копится, холодно, день короткий",1:"Морозы, глубокий снег",2:"Лучшее время для фрирайда",3:"Отлично, теплеет и светлеет",4:"Весна, конец сезона"},
