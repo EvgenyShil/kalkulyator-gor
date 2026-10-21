@@ -20,7 +20,7 @@ async function ribbon(dest, dmin, dmax, t) {
     trip_duration_min: String(t), trip_duration_max: String(t),
   });
   const r = await fetch("https://tickets-api.aviasales.ru/search/prices/ribbon?" + params, {
-    headers: { accept: "application/json", "user-agent": "Mozilla/5.0 (Macintosh) kalkulyator-sheregesha" },
+    headers: { accept: "application/json", "user-agent": "Mozilla/5.0 (Macintosh) kalkulyator-gor" },
   });
   if (!r.ok) throw new Error("Aviasales ответил кодом " + r.status);
   const j = await r.json();
