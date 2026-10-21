@@ -75,20 +75,23 @@ export async function savedBatch(items) {
 }
 
 /* История: { NOZ: { "2027-02-08|2027-02-15": [[время, цена], ...] }, _lastRun }.
-   Точку добавляем, если цена изменилась или прошло больше 20 часов; храним 40 последних.
-   batch: { NOZ: [варианты], KVK: [...] } — всё одной записью, чтобы беречь лимит Blob. */
+   Точку добавляем, если цена изменилась или прошло больше 20 часов; храним точки за 45 дней, не больше 40.
+   batch: { NOZ: [варианты], KVK: [...] } — всё одной записью, чтобы беречь лимит Blob.
+   Если ничего не изменилось — файл не перезаписываем. */
 export async function record(batch, extra) {
-  const now = Date.now(), today = new Date().toISOString().slice(0, 10);
+  const now = Date.now(), today = new Date().toISOString().slice(0, 10), old = now - 45 * 864e5;
   return update(FILES.history, h => {
+    let changed = !!extra;
     for (const dest of Object.keys(batch)) {
       const d = h[dest] || (h[dest] = {});
       for (const p of batch[dest]) {
         const k = p.depart + "|" + p.ret, a = d[k] || (d[k] = []), last = a[a.length - 1];
-        if (!last || last[1] !== p.price || now - last[0] > 20 * 3600e3) a.push([now, p.price]);
-        if (a.length > 40) a.splice(0, a.length - 40);
+        if (!last || last[1] !== p.price || now - last[0] > 20 * 3600e3) { a.push([now, p.price]); changed = true; }
+        const keep = a.filter(x => x[0] >= old).slice(-40);
+        if (keep.length !== a.length) { d[k] = keep; changed = true; }
       }
-      for (const k of Object.keys(d)) if (k.slice(0, 10) < today) delete d[k];
+      for (const k of Object.keys(d)) if (k.slice(0, 10) < today) { delete d[k]; changed = true; }
     }
-    return { ...h, ...(extra || {}) };
-  }, () => ({}));
+    return changed ? { ...h, ...(extra || {}) } : null;
+  }, () => ({}), { dry: !extra });
 }

@@ -912,12 +912,15 @@ function syncTrip(id,days){
   const p=PR[id]&&Array.isArray(PR[id].prices)&&PR[id].prices.find(x=>KEYP(x)===k&&x.price!=null);
   if(p&&!(r.own&&r.fareFor===k)){r.base=p.price+bagOf(id);r.own=false;r.fareFor=k}
 }
-async function fetchPrices(id){
+/* j — уже полученный ответ (когда цены грузятся сразу по всем курортам одним запросом) */
+async function fetchPrices(id,j){
   const dt=DT(id);
-  const qs=new URLSearchParams({dest:RES[id].dest,from:dt.from,to:dt.to,tmin:dt.tmin,tmax:dt.tmax,t:Date.now()});
-  const r=await fetch("/api/prices?"+qs,{cache:"no-store"});
-  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||("код "+r.status))}
-  const j=await r.json();
+  if(!j){
+    const qs=new URLSearchParams({dest:RES[id].dest,from:dt.from,to:dt.to,tmin:dt.tmin,tmax:dt.tmax,t:Date.now()});
+    const r=await fetch("/api/prices?"+qs,{cache:"no-store"});
+    if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||("код "+r.status))}
+    j=await r.json();
+  }
   PR[id]={prices:(j.prices||[]).filter(p=>p.price>0),hist:j.history||{},fetchedAt:j.fetchedAt||new Date().toISOString(),from:dt.from,to:dt.to,tmin:dt.tmin,tmax:dt.tmax};
   /* Есть цена на выбранные даты — обновляем её (если вы не вписали свою), нет — берём самый дешёвый вариант */
   const rr=S.r[id],k=DT(id).trip,list=PR[id].prices,same=list.find(p=>KEYP(p)===k),dd=p=>`${short(parseD(p.depart))}–${short(parseD(p.ret))}`;
@@ -937,8 +940,17 @@ async function loadPrices(){
 }
 async function loadAll(){
   const st=$("statusAll"),btn=$("loadAll");btn.disabled=true;st.hidden=false;st.className="status";
-  const errs=[];
-  for(const id of IDS){btn.textContent=`Загружаю: ${RES[id].name}…`;try{await fetchPrices(id)}catch(e){errs.push(`${RES[id].name}: ${e.message}`)}}
+  const errs=[];btn.textContent="Загружаю цены по всем курортам…";
+  /* один запрос на все курорты — история цен записывается одной записью */
+  try{
+    const batch=IDS.map(id=>{const dt=DT(id);return {dest:RES[id].dest,from:dt.from,to:dt.to,tmin:dt.tmin,tmax:dt.tmax}});
+    const r=await fetch("/api/prices?"+new URLSearchParams({batch:JSON.stringify(batch),t:Date.now()}),{cache:"no-store"});
+    if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error||("код "+r.status))}
+    const j=await r.json();
+    for(const id of IDS){const x=j.results[RES[id].dest];
+      if(!x||x.error){errs.push(`${RES[id].name}: ${x?x.error:"нет ответа"}`);continue}
+      await fetchPrices(id,{prices:x.prices,history:x.history,fetchedAt:j.fetchedAt})}
+  }catch(e){errs.push(e.message)}
   persist();renderAll(false);
   st.className=errs.length?"status err":"status";
   st.textContent=errs.length?`Не всё получилось: ${errs.join("; ")}`:`Цены обновлены в ${new Date().toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"})}.`;

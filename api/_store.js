@@ -28,12 +28,21 @@ async function etagOf(path) {
 }
 
 /* Прочитать, изменить, записать. Если кто-то записал между чтением и записью — повторить;
-   после трёх неудач записываем без проверки, чтобы правка не потерялась. */
-export async function update(path, change, empty) {
+   после трёх неудач записываем без проверки, чтобы правка не потерялась.
+   change может вернуть null — «ничего не изменилось», тогда записи нет.
+   dry: сначала просто прочитать и проверить, есть ли что менять (экономит запись и head). */
+export async function update(path, change, empty, { dry = false } = {}) {
+  if (dry) {
+    const first = await readJSON(path);
+    const base = first ? first.data : empty();
+    if (change(base) === null) return base;
+  }
   for (let i = 0; ; i++) {
     const etag = i < 3 ? await etagOf(path) : null;
     const cur = await readJSON(path);
-    const data = change(cur ? cur.data : empty());
+    const base = cur ? cur.data : empty();
+    const data = change(base);
+    if (data === null) return base;
     try { await writeJSON(path, data, etag); return data; }
     catch (e) { if (i >= 3 || !/precondition|etag|412/i.test(String(e && e.message))) throw e; }
   }
