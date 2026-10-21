@@ -10,7 +10,7 @@ import { tripsOf, savedBatch, record } from "./_aviasales.js";
 
 const clean = body => ({
   name: String(body.name || "Без названия").slice(0, 80),
-  summary: Array.isArray(body.summary) ? body.summary.slice(0, 8).map(x => ({
+  summary: Array.isArray(body.summary) ? body.summary.slice(0, 20).map(x => ({
     r: String(x && x.r || "").slice(0, 30),
     pp: Math.round(Number(x && x.pp) || 0),
   })) : [],

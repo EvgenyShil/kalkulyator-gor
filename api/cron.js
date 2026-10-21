@@ -2,9 +2,9 @@
 // (для их графиков) и по окнам дат из общего расчёта (для стрелок ↓↑ в таблице цен).
 // Не чаще раза в 12 часов — лишние вызовы ничего не пишут.
 import { FILES, readJSON } from "./_store.js";
-import { prices, record, savedBatch } from "./_aviasales.js";
+import { prices, record, savedBatch, RESORT_DEST } from "./_aviasales.js";
 
-const DEST = { sheregesh: "NOZ", kirovsk: "KVK", sochi: "AER", elbrus: "MRV" };
+const DEST = RESORT_DEST;
 const DEF = { from: "2026-11-20", to: "2027-02-28", tmin: 7, tmax: 10 };
 
 export default async function handler(req, res) {

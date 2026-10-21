@@ -1,10 +1,13 @@
 // Лента цен Aviasales и история цен. Общее для /api/prices и ежедневной проверки /api/cron.
-// Самый дешёвый прямой рейс из Москвы туда-обратно, 1 взрослый, тариф без багажа.
+// Самый дешёвый рейс из Москвы туда-обратно (прямой; в Японию — с пересадками), 1 взрослый, тариф без багажа.
 // Это кэш Aviasales (цены из недавних поисков), поэтому только ориентир: авиакомпанию
 // лента не отдаёт, а часть рейсов (например, S7 в Сочи) в ней не бывает вовсе.
 import { FILES, update } from "./_store.js";
 
-export const DESTS = ["NOZ", "KVK", "AER", "MRV"]; // Новокузнецк, Апатиты, Сочи, Минеральные Воды
+// Новокузнецк, Апатиты, Сочи, Минводы, Абакан, Южно-Сахалинск, Петропавловск-Камчатский, Саппоро, Токио
+export const DESTS = ["NOZ", "KVK", "AER", "MRV", "ABA", "UUS", "PKC", "SPK", "TYO"];
+/* В Японию прямых рейсов из Москвы нет — там ищем с любыми пересадками */
+const ANY_TRANSFERS = ["SPK", "TYO"];
 
 export const addDays = (s, n) => { const d = new Date(s + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
 
@@ -15,7 +18,7 @@ async function ribbon(dest, dmin, dmax, t) {
     currency: "RUB", brand: "AS", market: "ru", trip_class: "Y",
     passengers_adults: "1", passengers_children: "0", passengers_infants: "0",
     is_one_way: "false",
-    filters_state: JSON.stringify({ transfers_count: ["0"] }),
+    filters_state: JSON.stringify(ANY_TRANSFERS.includes(dest) ? {} : { transfers_count: ["0"] }),
     depart_date_min: dmin, depart_date_max: dmax,
     trip_duration_min: String(t), trip_duration_max: String(t),
   });
@@ -25,7 +28,7 @@ async function ribbon(dest, dmin, dmax, t) {
   if (!r.ok) throw new Error("Aviasales ответил кодом " + r.status);
   const j = await r.json();
   return (j.prices || [])
-    .filter(p => !p.no_directs)
+    .filter(p => p.value > 0 && (ANY_TRANSFERS.includes(dest) || !p.no_directs))
     .map(p => ({ depart: p.depart_date, ret: p.return_date, days: t, price: Math.round(p.value) }));
 }
 
@@ -46,7 +49,7 @@ export async function exact(dest, depart, ret) {
 }
 
 /* Поездки сохранённого расчёта: по каждому курорту его даты */
-export const RESORT_DEST = { sheregesh: "NOZ", kirovsk: "KVK", sochi: "AER", elbrus: "MRV" };
+export const RESORT_DEST = { sheregesh: "NOZ", kirovsk: "KVK", sochi: "AER", elbrus: "MRV", priiskovy: "ABA", sakhalin: "UUS", kamchatka: "PKC", niseko: "SPK", hakuba: "TYO" };
 export function tripsOf(state) {
   if (!state || typeof state !== "object") return [];
   const ok = k => /^\d{4}-\d{2}-\d{2}\|\d{4}-\d{2}-\d{2}$/.test(k || "");
